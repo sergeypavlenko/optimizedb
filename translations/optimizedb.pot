@@ -1,0 +1,145 @@
+# $Id$
+#
+# LANGUAGE translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  optimizedb.module: n/a
+#  optimizedb.info: n/a
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2013-05-30 08:00+0000\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: optimizedb.module:38;15 optimizedb.info:0
+msgid "Database Optimization"
+msgstr ""
+
+#: optimizedb.module:39
+msgid "Startup and configuration module."
+msgstr ""
+
+#: optimizedb.module:58
+msgid "You must perform <a href=\"@optimize_link\">database optimization</a> . <a href=\"@hide_link\">Hide notification</a>"
+msgstr ""
+
+#: optimizedb.module:71
+msgid "Executing commands manually"
+msgstr ""
+
+#: optimizedb.module:72
+msgid "Information on how to correctly perform when optimizing a database."
+msgstr ""
+
+#: optimizedb.module:77
+msgid "Clear cache_form table"
+msgstr ""
+
+#: optimizedb.module:83
+msgid "Optimize tables"
+msgstr ""
+
+#: optimizedb.module:89
+msgid "Automatic clear cache_form table"
+msgstr ""
+
+#: optimizedb.module:96
+msgid "Clear cache_form table every"
+msgstr ""
+
+#: optimizedb.module:97;137
+msgid "Last run: @date ago"
+msgstr ""
+
+#: optimizedb.module:100;140
+msgid "Disabled"
+msgstr ""
+
+#: optimizedb.module:101
+msgid "When performing Cron"
+msgstr ""
+
+#: optimizedb.module:102;141
+msgid "@count day"
+msgstr ""
+
+#: optimizedb.module:103;142
+msgid "2 day"
+msgstr ""
+
+#: optimizedb.module:104;143
+msgid "7 days"
+msgstr ""
+
+#: optimizedb.module:105;144
+msgid "14 days"
+msgstr ""
+
+#: optimizedb.module:106;145
+msgid "30 days"
+msgstr ""
+
+#: optimizedb.module:107;146
+msgid "60 days"
+msgstr ""
+
+#: optimizedb.module:124
+msgid "The current size of the table <strong>@length</strong>"
+msgstr ""
+
+#: optimizedb.module:129
+msgid "Optimization settings database"
+msgstr ""
+
+#: optimizedb.module:136
+msgid "Receive notification of the need to optimize the database, every"
+msgstr ""
+
+#: optimizedb.module:154
+msgid "Information about tables"
+msgstr ""
+
+#: optimizedb.module:155
+msgid "Current information on all database tables"
+msgstr ""
+
+#: optimizedb.module:157
+msgid "The size of all tables in the database: @size"
+msgstr ""
+
+#: optimizedb.module:179
+msgid "The following message on the need to perform optimization, you get - @date."
+msgstr ""
+
+#: optimizedb.module:182
+msgid "Alerts are not available"
+msgstr ""
+
+#: optimizedb.module:327
+msgid "Optimized @count tables"
+msgstr ""
+
+#: optimizedb.module:330
+msgid "Completed with errors."
+msgstr ""
+
+#: optimizedb.module:343
+msgid "The table is cleared."
+msgstr ""
+
+#: optimizedb.module:16 optimizedb.info:0
+msgid "Optimizing the site database and clearing tables cache_form"
+msgstr ""
+
+#: optimizedb.module:24
+msgid "Hide notification"
+msgstr ""
+

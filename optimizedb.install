@@ -1,0 +1,18 @@
+<?php
+
+/**
+ * @file
+ * Installation file for Database Optimization
+ */
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function optimizedb_uninstall() {
+  variable_del('optimizedb_clear_period');
+  variable_del('optimizedb_last_clear');
+  variable_del('optimizedb_optimization_period');
+  variable_del('optimizedb_last_optimization');
+  variable_del('optimizedb_clear_period');
+  variable_del('optimizedb_last_clear');
+}

@@ -1,0 +1,378 @@
+<?php
+
+/**
+ * @file
+ * Database Optimization
+ *
+ * Optimizing the site database and clearing tables cache_form
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function optimizedb_menu() {
+  $items['admin/config/development/optimizedb'] = array(
+    'title' => 'Database Optimization',
+    'description' => 'Optimizing the site database and clearing tables cache_form',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('optimizedb_admin'),
+    'access arguments' => array('administer optimizedb settings'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  
+  $items['admin/config/development/optimizedb/hide'] = array(
+    'title' => 'Hide notification',
+    'page callback' => 'optimizedb_hide_notification',
+    'access arguments' => array('administer optimizedb settings'),
+  );
+  
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function optimizedb_permission() {
+  return array(
+    'administer optimizedb settings' => array(
+      'title' => t('Database Optimization'),
+      'description' => t('Startup and configuration module.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_init().
+ */
+function optimizedb_init() {
+  // A list of pages on which the notification of the need to optimize the output will not be
+  $pages_without_notification = array(
+    'admin/config/development/optimizedb',
+    'admin/config/development/optimizedb/hide',
+  );
+  
+  if (arg(0) == 'admin' && !in_array(current_path(), $pages_without_notification)) {
+    $notify_optimize = variable_get('optimizedb_notify_optimize', FALSE);
+    
+    if (user_access('administer optimizedb settings') && $notify_optimize) {
+      drupal_set_message(t('You must perform <a href="@optimize_link">database optimization</a> . <a href="@hide_link">Hide notification</a>', array('@optimize_link' => url('admin/config/development/optimizedb'), '@hide_link' => url('admin/config/development/optimizedb/hide'))), 'error');
+    }
+  }
+}
+
+/**
+ * Configuring the module
+ */
+function optimizedb_admin() {
+  $form = array();
+  
+  $form['executing_commands'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Executing commands manually'),
+  );
+
+  $form['executing_commands']['clear'] = array(
+    '#type' => 'submit',
+    '#value' => t('Clear cache_form table'),
+    '#submit' => array('optimizedb_admin_clear_table_submit'),
+  );
+
+  $form['executing_commands']['optimize'] = array(
+    '#type' => 'submit',
+    '#value' => t('Optimize tables'),
+    '#submit' => array('optimizedb_admin_optimize_table_submit'),
+  );
+
+  $form['optimizedb_auto'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Automatic clear cache_form table')
+  );
+
+  $last_clear = variable_get('optimizedb_last_clear', 0);
+
+  $form['optimizedb_auto']['optimizedb_clear_period'] = array(
+    '#type' => 'select',
+    '#title' => t('Clear cache_form table every'),
+    '#description' => t('Last run: @date ago', array('@date' => _optimizedb_date($last_clear))),
+    '#default_value' => variable_get('optimizedb_clear_period', 0),
+    '#options' => array(
+      0 => t('Disabled'),
+      100 => t('When performing Cron'),
+      1 => t('@count day', array('@count' => 1)),
+      2 => t('2 day'),
+      7 => t('7 days'),
+      14 => t('14 days'),
+      30 => t('30 days'),
+      60 => t('60 days'),
+    ),
+  );
+  
+  switch(db_driver()) {
+    case 'mysql':
+      $table_length = db_query("SHOW TABLE STATUS LIKE '{cache_form}';")->fetchObject();
+      break;
+
+    case 'pgsql':
+      $table_length = db_query("SELECT pg_total_relation_size('{cache_form}') AS \"Data_length\", 0 AS \"Index_length\"")->fetchObject();
+      break;
+  }
+  
+  $table_length = $table_length->Data_length + $table_length->Index_length;
+  
+  $form['optimizedb_auto']['lenght'] = array(
+    '#markup' => t('The current size of the table <strong>@length</strong>', array('@length' => _optimizedb_format_size($table_length))),
+  );
+  
+  $form['optimize_table'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Optimization settings database')
+  );
+
+  $last_optimization = variable_get('optimizedb_last_optimization', 0);
+  
+  $form['optimize_table']['optimizedb_optimization_period'] = array(
+    '#type' => 'select',
+    '#title' => t('Receive notification of the need to optimize the database, every'),
+    '#description' => t('Last run: @date ago', array('@date' => _optimizedb_date($last_optimization))),
+    '#default_value' => variable_get('optimizedb_optimization_period', 0),
+    '#options' => array(
+      0 => t('Disabled'),
+      1 => t('@count day', array('@count' => 1)),
+      2 => t('2 day'),
+      7 => t('7 days'),
+      14 => t('14 days'),
+      30 => t('30 days'),
+      60 => t('60 days'),
+    ),
+  );
+  
+  $size_tables = _optimizedb_format_size(variable_get('optimizedb_tables_size', 0));
+  
+  $form['optimize_table']['tables'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Information about tables'),
+    '#description' => t('Current information on all database tables'),
+    '#default_value' => _optimizedb_tables_status(),
+    '#suffix' => '<b>' . t('The size of all tables in the database: @size', array('@size' => $size_tables)) . '</b>',
+  );
+  
+  return system_settings_form($form);
+}
+
+/**
+ * Page hide notification
+ */
+function optimizedb_hide_notification() {
+  $time = REQUEST_TIME;
+  $notify_optimize = variable_get('optimizedb_notify_optimize', FALSE);
+  
+  // There is a need to disable the notification?
+  if ($notify_optimize) {
+    variable_set('optimizedb_notify_optimize', FALSE);
+    // If the notification of the need to optimize hiding, so she runs
+    variable_set('optimizedb_last_optimization', $time);
+    
+    $optimization_period = (int) variable_get('optimizedb_optimization_period', 0);
+    $time_next_optimization = strtotime("+ " . $optimization_period . " day", $time);
+
+    drupal_set_message(t('The following message on the need to perform optimization, you get - @date.', array('@date' => format_date($time_next_optimization))));
+  }
+  else {
+    drupal_set_message(t('Alerts are not available'));
+  }
+  
+  return '';
+}
+
+/**
+ * Convert bytes to the usual size for people
+ * 
+ * @param int $size
+ *  Size in bytes
+ * 
+ * @return string
+ */
+function _optimizedb_format_size($size) {
+  $metrics[0] = 'Byte';
+  $metrics[1] = 'KB';
+  $metrics[2] = 'MB';
+  $metrics[3] = 'GB';
+  $metrics[4] = 'TB';
+  $metric = 0;
+  
+  while (floor($size / 1024) > 0) {
+    ++$metric;
+    $size /= 1024;
+  }
+  
+  $ret = round($size, 1) . " " . (isset($metrics[$metric]) ? $metrics[$metric] : '??');
+
+  return $ret;
+ }
+
+/**
+ * Output how much time passed from the specified date
+ * 
+ * @param int $timestamp
+ * 
+ * @return string
+ */
+function _optimizedb_date($timestamp) {
+  $timestamp = (int) $timestamp;
+  if ($timestamp == 0) {
+    return 'None';
+  }
+
+  $difference = REQUEST_TIME - $timestamp;
+  $text = format_interval($difference, 1);
+
+  return $text;
+}
+
+/**
+ * List and the size of the database tables
+ * 
+ * @return string
+ *  List of Tables with \n.
+ */
+function _optimizedb_tables_status() {
+  $result = "";
+  
+  if ($cache = cache_get('optimizedb_tables_status')) {
+    $result = $cache->data;
+  }
+  else {
+    switch(db_driver()) {
+      case 'mysql':
+        $tables = db_query("SHOW TABLE STATUS", array(), array('fetch' => PDO::FETCH_OBJ));
+        break;
+
+      case 'pgsql':
+        $tables = db_query("SELECT table_name as \"Name\", pg_total_relation_size(table_name) AS \"Data_length\", 0 as \"Index_length\" FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name", array(), array('fetch' => PDO::FETCH_OBJ));
+        break;
+    }
+    
+    $result = array();
+
+    if ($tables) {
+      $size_tables = 0;
+      
+      foreach ($tables as $table) {
+        $length = $table->Data_length + $table->Index_length;
+        $result[] = $table->Name . " " . _optimizedb_format_size($length);
+        
+        $size_tables += $length;
+      }
+      
+      $result = implode($result, "\n");
+      cache_set('optimizedb_tables_status', $result, 'cache', 60 * 60);
+      
+      // The total size of the tables
+      variable_set('optimizedb_tables_size', $size_tables);
+    }
+  }
+  
+  return $result;
+}
+
+/**
+ * Implements hook_FORMID_submit().
+ */
+function optimizedb_admin_optimize_table_submit($form, &$form_state) {
+  switch(db_driver()) {
+    case 'mysql':
+      $tables = db_query("SHOW TABLES", array(), array('fetch' => PDO::FETCH_NUM));
+      break;
+    
+    case 'pgsql':
+      $tables = db_query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name", array(), array('fetch' => PDO::FETCH_NUM));
+      break;
+  }
+
+  foreach ($tables as $table) {
+    $operations[] = array('optimizedb_optimize_batch_run', array($table[0]));
+  }
+
+  $batch = array(
+    'operations' => $operations,
+    'finished' => 'optimizedb_optimize_batch_finished',
+  );
+
+  batch_set($batch);
+}
+
+/**
+ * Batch function
+ */
+function optimizedb_optimize_batch_run($table, &$context) {
+  switch(db_driver()) {
+    case 'mysql':
+      db_query('OPTIMIZE TABLE {' . $table . '}');
+      break;
+    
+    case 'pgsql':
+      db_query('VACUUM ANALYZE {' . $table . '}');
+      break;
+  }
+  
+  $context['results'][] = $table;
+}
+
+/**
+ * Completion optimization
+ */
+function optimizedb_optimize_batch_finished($success, $results, $operations) {
+  if ($success) {
+    drupal_set_message(t('Optimized @count tables', array('@count' => count($results))));
+  }
+  else {
+    drupal_set_message(t('Completed with errors.'), 'error');
+  }
+  
+  variable_set('optimizedb_notify_optimize', FALSE);
+  variable_set('optimizedb_last_optimization', REQUEST_TIME);
+  cache_clear_all('optimizedb_tables_status', 'cache');
+}
+
+/**
+ * Implements hook_FORMID_submit().
+ */
+function optimizedb_admin_clear_table_submit($form, &$form_state) {
+  _optimizedb_clear_table();
+  drupal_set_message(t('The table is cleared.'));
+}
+
+/**
+ * Cleaning table cache_form and cleaning time record
+ */
+function _optimizedb_clear_table() {
+  db_query("DELETE FROM {cache_form} where 'expire' < :timestamp", array(':timestamp' => REQUEST_TIME));
+  variable_set('optimizedb_last_clear', REQUEST_TIME);
+}
+
+/**
+ * Implements hook_cron().
+ */
+function optimizedb_cron() {
+  // Clear cache_form table
+  $clear_period = (int) variable_get('optimizedb_clear_period', 0);
+  if ($clear_period !== 0) {
+    $last_clear = variable_get('optimizedb_last_clear', 0);
+    $time_next_clear = strtotime("+ " . $clear_period . " day", ($last_clear == 0 ? REQUEST_TIME : $last_clear));
+
+    if ($clear_period == 100 || $time_next_clear <= REQUEST_TIME) {
+      _optimizedb_clear_table();
+    }
+  }
+  
+  // Check whether there is a need to optimize
+  $optimization_period = (int) variable_get('optimizedb_optimization_period', 0);
+  if ($optimization_period !== 0) {
+    $last_optimization = variable_get('optimizedb_last_optimization', 0);
+    $time_next_optimization = strtotime("+ " . $optimization_period . " day", ($last_optimization == 0 ? REQUEST_TIME : $last_optimization));
+
+    if ($time_next_optimization <= REQUEST_TIME) {
+       variable_set('optimizedb_notify_optimize', TRUE);
+    }
+  }
+}

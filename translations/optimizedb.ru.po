@@ -1,0 +1,152 @@
+# $Id$
+#
+# Russian translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  optimizedb.module: n/a
+#  optimizedb.info: n/a
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2013-05-30 08:00+0000\n"
+"PO-Revision-Date: 2013-05-30 11:16+0200\n"
+"Last-Translator: Sergei <sergiy.pavlenko@ya.ru>\n"
+"Language-Team: Russian <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=((((n%10)==1)&&((n%100)!=11))?(0):(((((n%10)"
+">=2)&&((n%10)<=4))&&(((n%100)<10)||((n%100)>=20)))?(1):2));\n"
+"X-Generator: Poedit 1.5.5\n"
+
+#: optimizedb.module:38;15 optimizedb.info:0
+msgid "Database Optimization"
+msgstr "Оптимизация базы данных"
+
+#: optimizedb.module:39
+msgid "Startup and configuration module."
+msgstr "Запуск и конфигурация модуля."
+
+#: optimizedb.module:58
+msgid ""
+"You must perform <a href=\"@optimize_link\">database optimization</a> . <a "
+"href=\"@hide_link\">Hide notification</a>"
+msgstr ""
+"Необходимо выполнить <a href=\"@optimize_link\">оптимизацию баз данных</a>. "
+"<a href=\"@hide_link\">Скрыть уведомление</a>"
+
+#: optimizedb.module:71
+msgid "Executing commands manually"
+msgstr "Выполнение команд вручную"
+
+#: optimizedb.module:72
+msgid "Information on how to correctly perform when optimizing a database."
+msgstr "Информация о том, как правильно выполнять оптимизацию базы данных."
+
+#: optimizedb.module:77
+msgid "Clear cache_form table"
+msgstr "Очистить таблицу cache_form"
+
+#: optimizedb.module:83
+msgid "Optimize tables"
+msgstr "Оптимизация таблиц"
+
+#: optimizedb.module:89
+msgid "Automatic clear cache_form table"
+msgstr "Автоматически очистить таблицу cache_form"
+
+#: optimizedb.module:96
+msgid "Clear cache_form table every"
+msgstr "Очистить таблицу cache_form каждый"
+
+#: optimizedb.module:97;137
+msgid "Last run: @date ago"
+msgstr "Последний запуск: @date назад"
+
+#: optimizedb.module:100;140
+msgid "Disabled"
+msgstr "Отключено"
+
+#: optimizedb.module:101
+msgid "When performing Cron"
+msgstr "При выполнении Cron"
+
+#: optimizedb.module:102;141
+msgid "@count day"
+msgstr "@count день"
+
+#: optimizedb.module:103;142
+msgid "2 day"
+msgstr "2 дня"
+
+#: optimizedb.module:104;143
+msgid "7 days"
+msgstr "7 дней"
+
+#: optimizedb.module:105;144
+msgid "14 days"
+msgstr "14 дней"
+
+#: optimizedb.module:106;145
+msgid "30 days"
+msgstr "30 дней"
+
+#: optimizedb.module:107;146
+msgid "60 days"
+msgstr "60 дней"
+
+#: optimizedb.module:124
+msgid "The current size of the table <strong>@length</strong>"
+msgstr "Нынешний размер таблицы <strong>@length</strong>"
+
+#: optimizedb.module:129
+msgid "Optimization settings database"
+msgstr "Параметры оптимизации базы данных"
+
+#: optimizedb.module:136
+msgid "Receive notification of the need to optimize the database, every"
+msgstr "Получение уведомления о необходимости оптимизации базы данных, каждый"
+
+#: optimizedb.module:154
+msgid "Information about tables"
+msgstr "Информация о таблицах"
+
+#: optimizedb.module:155
+msgid "Current information on all database tables"
+msgstr "Текущая информация о всех таблиц базы данных"
+
+#: optimizedb.module:157
+msgid "The size of all tables in the database: @size"
+msgstr "Размер всех таблиц в базе данных: @size"
+
+#: optimizedb.module:179
+msgid ""
+"The following message on the need to perform optimization, you get - @date."
+msgstr ""
+"Следующее сообщение о необходимости выполнять оптимизацию, вы получите - "
+"@date."
+
+#: optimizedb.module:182
+msgid "Alerts are not available"
+msgstr "Предупреждения не доступны"
+
+#: optimizedb.module:327
+msgid "Optimized @count tables"
+msgstr "Оптимизировано @count таблиц"
+
+#: optimizedb.module:330
+msgid "Completed with errors."
+msgstr "Выполнено с ошибками."
+
+#: optimizedb.module:343
+msgid "The table is cleared."
+msgstr "Таблица очищена."
+
+#: optimizedb.module:16 optimizedb.info:0
+msgid "Optimizing the site database and clearing tables cache_form"
+msgstr "Оптимизация базы данных и очистка таблиц cache_form"
+
+#: optimizedb.module:24
+msgid "Hide notification"
+msgstr "Скрыть уведомления"
