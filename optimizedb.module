@@ -86,7 +86,7 @@ function optimizedb_admin() {
 
   $form['optimizedb_auto'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Automatic clear cache_form table.')
+    '#title' => t('Automatic clear cache_form table.'),
   );
 
   $last_clear = variable_get('optimizedb_last_clear', 0);
@@ -94,7 +94,7 @@ function optimizedb_admin() {
   $form['optimizedb_auto']['optimizedb_clear_period'] = array(
     '#type' => 'select',
     '#title' => t('Clear cache_form table every'),
-    '#description' => t('Last run: @date ago', array('@date' => _optimizedb_date($last_clear))),
+    '#description' => t('Last run: @date ago.', array('@date' => _optimizedb_date($last_clear))),
     '#default_value' => variable_get('optimizedb_clear_period', 0),
     '#options' => array(
       0 => t('Disabled'),
@@ -121,7 +121,7 @@ function optimizedb_admin() {
   $table_length = $table_length->Data_length + $table_length->Index_length;
 
   $form['optimizedb_auto']['lenght'] = array(
-    '#markup' => t('The current size of the table <strong>@length</strong>', array('@length' => _optimizedb_format_size($table_length))),
+    '#markup' => t('The current size of the table <strong>@length</strong>.', array('@length' => _optimizedb_format_size($table_length))),
   );
 
   $form['optimize_table'] = array(
@@ -133,8 +133,8 @@ function optimizedb_admin() {
 
   $form['optimize_table']['optimizedb_optimization_period'] = array(
     '#type' => 'select',
-    '#title' => t('Receive notification of the need to optimize the database, every'),
-    '#description' => t('Last run: @date ago', array('@date' => _optimizedb_date($last_optimization))),
+    '#title' => t('Receive notification of the need to optimize the database, every.'),
+    '#description' => t('Last run: @date ago.', array('@date' => _optimizedb_date($last_optimization))),
     '#default_value' => variable_get('optimizedb_optimization_period', 0),
     '#options' => array(
       0 => t('Disabled'),
@@ -151,8 +151,8 @@ function optimizedb_admin() {
 
   $form['optimize_table']['tables'] = array(
     '#type' => 'textarea',
-    '#title' => t('Information about tables'),
-    '#description' => t('Current information on all database tables'),
+    '#title' => t('Information about tables.'),
+    '#description' => t('Current information on all database tables.'),
     '#default_value' => _optimizedb_tables_status(),
     '#suffix' => '<b>' . t('The size of all tables in the database: @size.', array('@size' => $size_tables)) . '</b>',
   );
