@@ -6,7 +6,7 @@
  */
 
 /**
- * Implementation of hook_uninstall().
+ * Implements of hook_uninstall().
  */
 function optimizedb_uninstall() {
   variable_del('optimizedb_clear_period');

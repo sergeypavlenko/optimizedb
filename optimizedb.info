@@ -2,7 +2,3 @@ name = Database Optimization
 description = Optimizing the site database and clearing tables cache_form
 core = 7.x
 configure = admin/config/development/optimizedb
-
-files[] = optimizedb.module
-
-version = "7.x-1.0"
