@@ -86,7 +86,7 @@ function optimizedb_admin() {
 
   $form['optimizedb_auto'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Automatic clear cache_form table')
+    '#title' => t('Automatic clear cache_form table.')
   );
 
   $last_clear = variable_get('optimizedb_last_clear', 0);
@@ -349,7 +349,7 @@ function optimizedb_admin_clear_table_submit($form, &$form_state) {
 }
 
 /**
- * Cleaning table cache_form and cleaning time record
+ * Cleaning table cache_form and cleaning time record.
  */
 function _optimizedb_clear_table() {
   db_query("DELETE FROM {cache_form} where 'expire' < :timestamp", array(':timestamp' => REQUEST_TIME));
@@ -378,7 +378,7 @@ function optimizedb_cron() {
     $time_next_optimization = strtotime("+ " . $optimization_period . " day", ($last_optimization == 0 ? REQUEST_TIME : $last_optimization));
 
     if ($time_next_optimization <= REQUEST_TIME) {
-       variable_set('optimizedb_notify_optimize', TRUE);
+      variable_set('optimizedb_notify_optimize', TRUE);
     }
   }
 }
