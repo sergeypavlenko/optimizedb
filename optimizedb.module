@@ -62,6 +62,14 @@ function optimizedb_init() {
 }
 
 /**
+ * Implements hook_enable().
+ */
+function optimizedb_enable() {
+  // Update information on the size of tables
+  _optimizedb_tables_status();
+}
+
+/**
  * Configuring the module.
  */
 function optimizedb_admin() {
