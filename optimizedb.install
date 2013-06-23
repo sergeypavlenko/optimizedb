@@ -6,6 +6,14 @@
  */
 
 /**
+ * Implements hook_enable().
+ */
+function optimizedb_enable() {
+  // Update information on the size of tables.
+  _optimizedb_tables_status();
+}
+
+/**
  * Implements of hook_uninstall().
  */
 function optimizedb_uninstall() {
@@ -13,6 +21,6 @@ function optimizedb_uninstall() {
   variable_del('optimizedb_last_clear');
   variable_del('optimizedb_optimization_period');
   variable_del('optimizedb_last_optimization');
-  variable_del('optimizedb_clear_period');
-  variable_del('optimizedb_last_clear');
+  variable_del('optimizedb_notify_optimize');
+  variable_del('optimizedb_tables_size');
 }
