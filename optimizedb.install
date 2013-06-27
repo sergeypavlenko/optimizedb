@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Installation file for Database Optimization
+ * Installation file for Database Optimization.
  */
 
 /**
@@ -10,7 +10,7 @@
  */
 function optimizedb_enable() {
   // Update information on the size of tables.
-  _optimizedb_tables_status();
+  _optimizedb_tables_list();
 }
 
 /**
@@ -23,4 +23,11 @@ function optimizedb_uninstall() {
   variable_del('optimizedb_last_optimization');
   variable_del('optimizedb_notify_optimize');
   variable_del('optimizedb_tables_size');
+}
+
+/**
+ * Implements of hook_update_N().
+ */
+function optimizedb_update_7100() {
+  cache_clear_all('optimizedb_tables_status');
 }

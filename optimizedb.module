@@ -4,7 +4,7 @@
  * @file
  * Database Optimization
  *
- * Optimizing the site database and clearing tables cache_form
+ * Optimizing the site database and clearing tables cache_form.
  */
 
 /**
@@ -23,6 +23,12 @@ function optimizedb_menu() {
   $items['admin/config/development/optimizedb/hide'] = array(
     'title' => 'Hide notification',
     'page callback' => 'optimizedb_hide_notification',
+    'access arguments' => array('administer optimizedb settings'),
+  );
+
+  $items['admin/config/development/optimizedb/list_tables'] = array(
+    'title' => 'List of tables in the database',
+    'page callback' => 'optimizedb_list_tables',
     'access arguments' => array('administer optimizedb settings'),
   );
 
@@ -161,13 +167,12 @@ function optimizedb_admin() {
   $size_tables = _optimizedb_format_size(variable_get('optimizedb_tables_size', 0));
 
   $form['optimize_table']['tables'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Information about tables.'),
-    '#description' => t('Current information on all database tables.'),
-    '#default_value' => _optimizedb_tables_status(),
-    '#suffix' => '<b>' . t('The size of all tables in the database: @size.', array(
+    '#type' => 'item',
+    '#title' => t('Current information on all database tables.'),
+    '#markup' => t('The size of all tables in the database: <b>@size</b>. View the size of the tables separately, you can on the page - <a href="@url">List of tables in the database</a>.', array(
       '@size' => $size_tables,
-    )) . '</b>',
+      '@url' => url('admin/config/development/optimizedb/list_tables'),
+    )),
   );
 
   return system_settings_form($form);
@@ -198,6 +203,55 @@ function optimizedb_hide_notification() {
   }
 
   return '';
+}
+
+/**
+ * List of tables in the database with the size and sorting.
+ *
+ * @return string
+ *   Table with a list of tables.
+ */
+function optimizedb_list_tables() {
+  $headers = array(
+    array('data' => t('Table name')),
+    array('data' => t('Table size'), 'field' => 'size', 'sort' => 'desc'),
+  );
+
+  $rows = _optimizedb_tables_list();
+
+  // Desc or asc.
+  $sort = tablesort_get_sort($headers);
+
+  $sort_table = &drupal_static('_optimizedb_list_tables_sort:sort');
+  $sort_table = $sort;
+
+  // Sort descending and ascending.
+  usort($rows, '_optimizedb_list_tables_sort');
+
+  // Parameter "size_byte" us only needed to sort, now his unit to remove.
+  $rows = array_map(function($row) {
+    unset($row['size_byte']);
+    return $row;
+  }, $rows);
+
+  $table = array('header' => $headers, 'rows' => $rows);
+
+  return theme('table', $table);
+}
+
+/**
+ * Sorting table data size.
+ *
+ * Callback for usort() in optimizedb_list_tables().
+ */
+function _optimizedb_list_tables_sort($a, $b) {
+  $sort = &drupal_static(__FUNCTION__ . ':sort');
+
+  if ($sort == 'asc') {
+    return $a['size_byte']['data'] > $b['size_byte']['data'];
+  }
+
+  return $a['size_byte']['data'] < $b['size_byte']['data'];
 }
 
 /**
@@ -253,14 +307,12 @@ function _optimizedb_date($timestamp) {
 /**
  * List and the size of the database tables.
  * 
- * @return string
- *   List of Tables with \n.
+ * @return array
+ *   An array with a list of database tables.
  */
-function _optimizedb_tables_status() {
-  $result = '';
-
-  if ($cache = cache_get('optimizedb_tables_status')) {
-    $result = $cache->data;
+function _optimizedb_tables_list() {
+  if ($cache = cache_get('optimizedb_list_tables')) {
+    $result = unserialize($cache->data);
   }
   else {
     switch (db_driver()) {
@@ -287,20 +339,23 @@ function _optimizedb_tables_status() {
 
       foreach ($tables as $table) {
         $length = $table->Data_length + $table->Index_length;
-        $result[] = $table->Name . ' ' . _optimizedb_format_size($length);
+        $result[] = array(
+          'name' => array('data' => $table->Name),
+          'size' => array('data' => _optimizedb_format_size($length)),
+          'size_byte' => array('data' => $length),
+        );
 
         $size_tables += $length;
       }
 
-      $result = implode($result, "\n");
-      cache_set('optimizedb_tables_status', $result, 'cache', 60 * 60);
+      cache_set('optimizedb_list_tables', serialize($result), 'cache', 60 * 60);
 
       // The total size of the tables.
       variable_set('optimizedb_tables_size', $size_tables);
     }
   }
 
-  return $result;
+  return (array) $result;
 }
 
 /**
