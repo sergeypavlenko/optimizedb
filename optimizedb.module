@@ -301,7 +301,7 @@ function _optimizedb_date($timestamp) {
   $difference = REQUEST_TIME - $timestamp;
   $text = format_interval($difference, 1);
 
-  return $text;
+  return t($text);
 }
 
 /**
