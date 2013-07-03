@@ -393,8 +393,6 @@ function optimizedb_admin_optimize_table_submit($form, &$form_state) {
  * Batch function.
  */
 function optimizedb_optimize_batch_run($table, &$context) {
-  $table = check_plain($table);
-
   switch (db_driver()) {
     case 'mysql':
       db_query('OPTIMIZE TABLE {' . $table . '}');
