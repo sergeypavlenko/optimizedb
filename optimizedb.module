@@ -295,13 +295,13 @@ function _optimizedb_format_size($size) {
 function _optimizedb_date($timestamp) {
   $timestamp = (int) $timestamp;
   if ($timestamp == 0) {
-    return 'None';
+    return t('None');
   }
 
   $difference = REQUEST_TIME - $timestamp;
   $text = format_interval($difference, 1);
 
-  return t($text);
+  return $text;
 }
 
 /**
