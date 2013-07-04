@@ -48,30 +48,6 @@ function optimizedb_permission() {
 }
 
 /**
- * Implements hook_init().
- */
-function optimizedb_init() {
-  // A list of pages on which the notification of the need to optimize
-  // the output will not be.
-  $pages_without_notification = array(
-    'admin/config/development/optimizedb',
-    'admin/config/development/optimizedb/hide',
-  );
-
-  if (arg(0) == 'admin' && !in_array(current_path(), $pages_without_notification)) {
-    $notify_optimize = variable_get('optimizedb_notify_optimize', FALSE);
-
-    if (user_access('administer optimizedb settings') && $notify_optimize) {
-      drupal_set_message(t('You must perform <a href="@optimize_link">database optimization</a>.
-      <a href="@hide_link">Hide notification</a>', array(
-        '@optimize_link' => url('admin/config/development/optimizedb'),
-        '@hide_link' => url('admin/config/development/optimizedb/hide'),
-      )), 'error');
-    }
-  }
-}
-
-/**
  * Configuring the module.
  */
 function optimizedb_admin() {
