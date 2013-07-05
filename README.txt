@@ -1,4 +1,4 @@
-Known issue on sites with Drupal - overgrowth table cache_form. The table
+Known issue on sites with Drupal - table cache_form overgrowth. The table
 stores the forms cache site and Drupal cache_form not clear when the
 Cron-tasks. cache_form may be large, in many times greater than the total
 size of all data in the database. Very often this problem, site owners know
