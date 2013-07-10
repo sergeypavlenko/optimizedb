@@ -369,17 +369,33 @@ function optimizedb_admin_optimize_table_submit($form, &$form_state) {
  * Batch function.
  */
 function optimizedb_optimize_batch_run($table, &$context) {
+  // Standard the status the result operation.
+  $status = 'success';
+
   switch (db_driver()) {
     case 'mysql':
-      db_query('OPTIMIZE TABLE {' . $table . '}');
+      try {
+        $result = db_query('OPTIMIZE TABLE {' . $table . '}')->fetchObject();
+        if (isset($result->Msg_type) && in_array(strtolower($result->Msg_type), array('error', 'warning'))) {
+          $status = 'error';
+        }
+      }
+      catch (Exception $e) {
+        $status = 'error';
+      }
       break;
 
     case 'pgsql':
-      db_query('VACUUM ANALYZE {' . $table . '}');
+      try {
+        db_query('VACUUM ANALYZE {' . $table . '}');
+      }
+      catch (Exception $e) {
+        $status = 'error';
+      }
       break;
   }
 
-  $context['results'][] = $table;
+  $context['results'][$status][] = $table;
 }
 
 /**
@@ -387,9 +403,18 @@ function optimizedb_optimize_batch_run($table, &$context) {
  */
 function optimizedb_optimize_batch_finished($success, $results, $operations) {
   if ($success) {
-    drupal_set_message(t('Optimized @count tables', array(
-      '@count' => count($results),
-    )));
+    if (isset($results['error'])) {
+      drupal_set_message(t('When optimizing experiencing errors with tables:
+      @tables. You need as quickly as possible to check the table. Other tables
+      were successfully optimized.', array(
+        '@tables' => implode(', ', $results['error']),
+      )), 'error');
+    }
+    else {
+      drupal_set_message(t('Optimized @count tables.', array(
+        '@count' => count($results['success']),
+      )));
+    }
   }
   else {
     drupal_set_message(t('Completed with errors.'), 'error');
