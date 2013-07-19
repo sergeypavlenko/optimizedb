@@ -205,14 +205,25 @@ function optimizedb_list_tables() {
   usort($rows, '_optimizedb_list_tables_sort');
 
   // Parameter "size_byte" us only needed to sort, now his unit to remove.
-  $rows = array_map(function($row) {
-    unset($row['size_byte']);
-    return $row;
-  }, $rows);
+  $rows = array_map('optimizedb_list_tables_remove_site_byte', $rows);
 
   $table = array('header' => $headers, 'rows' => $rows);
 
   return theme('table', $table);
+}
+
+/**
+ * Remove the "size_byte" of the array.
+ *
+ * @param array $row
+ *   Array.
+ *
+ * @return array
+ *   Array.
+ */
+function optimizedb_list_tables_remove_site_byte($row) {
+  unset($row['size_byte']);
+  return $row;
 }
 
 /**

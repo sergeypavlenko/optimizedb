@@ -3,4 +3,3 @@ description = Optimizing the site database and clearing tables cache_form.
 core = 7.x
 package = Development
 configure = admin/config/development/optimizedb
-php = 5.3
