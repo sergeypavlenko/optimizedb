@@ -374,6 +374,12 @@ function optimizedb_admin_optimize_table_submit($form, &$form_state) {
   );
 
   batch_set($batch);
+
+  // Calling this function, you need to run the optimization from
+  // the command line.
+  if (PHP_SAPI == 'cli') {
+    drush_backend_batch_process();
+  }
 }
 
 /**
@@ -406,6 +412,12 @@ function optimizedb_optimize_batch_run($table, &$context) {
       break;
   }
 
+  if (PHP_SAPI == 'cli') {
+    drush_print(dt('Table "@name" been optimized.', array(
+      '@name' => $table,
+    )));
+  }
+
   $context['results'][$status][] = $table;
 }
 
@@ -415,20 +427,42 @@ function optimizedb_optimize_batch_run($table, &$context) {
 function optimizedb_optimize_batch_finished($success, $results, $operations) {
   if ($success) {
     if (isset($results['error'])) {
-      drupal_set_message(t('When optimizing experiencing errors with tables:
-      @tables. You need as quickly as possible to check the table. Other tables
-      were successfully optimized.', array(
-        '@tables' => implode(', ', $results['error']),
-      )), 'error');
+      $message_error = 'When optimizing experiencing errors with tables:
+        @tables. You need as quickly as possible to check the table. Other tables
+        were successfully optimized.';
+      if (PHP_SAPI == 'cli') {
+        drush_log(dt($message_error, array(
+          '@tables' => implode(', ', $results['error']),
+        )), 'error');
+      }
+      else {
+        drupal_set_message(t($message_error, array(
+          '@tables' => implode(', ', $results['error']),
+        )), 'error');
+      }
     }
     else {
-      drupal_set_message(t('Optimized @count tables.', array(
-        '@count' => count($results['success']),
-      )));
+      $message_success = 'Optimized @count tables.';
+      if (PHP_SAPI == 'cli') {
+        drush_log(dt($message_success, array(
+          '@count' => count($results['success']),
+        )), 'success');
+      }
+      else {
+        drupal_set_message(t($message_success, array(
+          '@count' => count($results['success']),
+        )));
+      }
     }
   }
   else {
-    drupal_set_message(t('Completed with errors.'), 'error');
+    $message_error = 'Completed with errors.';
+    if (PHP_SAPI == 'cli') {
+      drush_log(dt($message_error), 'error');
+    }
+    else {
+      drupal_set_message(t($message_error), 'error');
+    }
   }
 
   variable_set('optimizedb_notify_optimize', FALSE);
