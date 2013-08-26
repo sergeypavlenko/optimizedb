@@ -298,48 +298,41 @@ function _optimizedb_date($timestamp) {
  *   An array with a list of database tables.
  */
 function _optimizedb_tables_list() {
-  if ($cache = cache_get('optimizedb_list_tables')) {
-    $result = unserialize($cache->data);
+  switch (db_driver()) {
+    case 'mysql':
+      $tables = db_query("SHOW TABLE STATUS", array(), array(
+        'fetch' => PDO::FETCH_OBJ,
+      ));
+      break;
+
+    case 'pgsql':
+      $tables = db_query("SELECT table_name as \"Name\",
+        pg_total_relation_size(table_name) AS \"Data_length\",
+        0 as \"Index_length\"
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+        ORDER BY table_name", array(), array('fetch' => PDO::FETCH_OBJ));
+      break;
   }
-  else {
-    switch (db_driver()) {
-      case 'mysql':
-        $tables = db_query("SHOW TABLE STATUS", array(), array(
-          'fetch' => PDO::FETCH_OBJ,
-        ));
-        break;
 
-      case 'pgsql':
-        $tables = db_query("SELECT table_name as \"Name\",
-          pg_total_relation_size(table_name) AS \"Data_length\",
-          0 as \"Index_length\"
-          FROM information_schema.tables
-          WHERE table_schema = 'public'
-          ORDER BY table_name", array(), array('fetch' => PDO::FETCH_OBJ));
-        break;
+  $result = array();
+
+  if ($tables) {
+    $size_tables = 0;
+
+    foreach ($tables as $table) {
+      $length = $table->Data_length + $table->Index_length;
+      $result[] = array(
+        'name' => array('data' => $table->Name),
+        'size' => array('data' => _optimizedb_format_size($length)),
+        'size_byte' => array('data' => $length),
+      );
+
+      $size_tables += $length;
     }
 
-    $result = array();
-
-    if ($tables) {
-      $size_tables = 0;
-
-      foreach ($tables as $table) {
-        $length = $table->Data_length + $table->Index_length;
-        $result[] = array(
-          'name' => array('data' => $table->Name),
-          'size' => array('data' => _optimizedb_format_size($length)),
-          'size_byte' => array('data' => $length),
-        );
-
-        $size_tables += $length;
-      }
-
-      cache_set('optimizedb_list_tables', serialize($result), 'cache', 60 * 60);
-
-      // The total size of the tables.
-      variable_set('optimizedb_tables_size', $size_tables);
-    }
+    // The total size of the tables.
+    variable_set('optimizedb_tables_size', $size_tables);
   }
 
   return (array) $result;
