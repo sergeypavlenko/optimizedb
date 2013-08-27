@@ -28,7 +28,8 @@ function optimizedb_menu() {
 
   $items['admin/config/development/optimizedb/list_tables'] = array(
     'title' => 'List of tables in the database',
-    'page callback' => 'optimizedb_list_tables',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('optimizedb_list_tables'),
     'access arguments' => array('administer optimizedb settings'),
   );
 
@@ -187,10 +188,16 @@ function optimizedb_hide_notification() {
  * @return string
  *   Table with a list of tables.
  */
-function optimizedb_list_tables() {
+function optimizedb_list_tables($form, &$form_state) {
   $headers = array(
-    array('data' => t('Table name')),
-    array('data' => t('Table size'), 'field' => 'size', 'sort' => 'desc'),
+    'name' => array(
+      'data' => t('Table name'),
+    ),
+    'size' => array(
+      'data' => t('Table size'),
+      'field' => 'size',
+      'sort' => 'desc',
+    ),
   );
 
   $rows = _optimizedb_tables_list();
@@ -207,9 +214,156 @@ function optimizedb_list_tables() {
   // Parameter "size_byte" us only needed to sort, now his unit to remove.
   $rows = array_map('optimizedb_list_tables_remove_site_byte', $rows);
 
-  $table = array('header' => $headers, 'rows' => $rows);
+  $operations_tables_result = isset($_SESSION['optimizedb_list_tables_operations']) ? $_SESSION['optimizedb_list_tables_operations'] : NULL;
 
-  return theme('table', $table);
+  if (!is_null($operations_tables_result)) {
+    if ($operations_tables_result == array()) {
+      drupal_set_message('The operation completed successfully.');
+    }
+    else {
+      $form['operations_tables'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Errors that arose during the operation:'),
+      );
+
+      $form['operations_tables']['errors'] = array(
+        '#markup' => theme('table', array(
+          'header' => array(
+            array('data' => t('Table name')),
+            array('data' => t('Type of problem')),
+            array('data' => t('Information about the problem')),
+          ),
+          'rows' => $operations_tables_result,
+         )),
+      );
+    }
+  }
+
+  $_SESSION['optimizedb_list_tables_operations'] = NULL;
+
+  if (db_driver() == 'mysql') {
+    $form['operations'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Operations with tables:'),
+    );
+
+    $form['operations']['check_tables'] = array(
+      '#type' => 'submit',
+      '#value' => t('Check tables'),
+      '#submit' => array('optimizedb_list_tables_check_tables_submit'),
+    );
+
+    $form['operations']['repair_tables'] = array(
+      '#type' => 'submit',
+      '#value' => t('Repair tables'),
+      '#submit' => array('optimizedb_list_tables_repair_tables_submit'),
+    );
+
+    $form['operations']['optimize_tables'] = array(
+      '#type' => 'submit',
+      '#value' => t('Optimize tables'),
+      '#submit' => array('optimizedb_list_tables_optimize_tables_submit'),
+    );
+  }
+
+  $form['tables'] = array(
+    '#type' => 'tableselect',
+    '#header' => $headers,
+    '#options' => $rows,
+    '#empty' => t('No content available.'),
+  );
+
+  return $form;
+}
+
+/**
+ * Implements hook_FORMID_submit().
+ */
+function optimizedb_list_tables_check_tables_submit($form, &$form_state) {
+  _optimizedb_list_tables_operation_execute($form, $form_state, 'check_table');
+}
+
+/**
+ * Implements hook_FORMID_submit().
+ */
+function optimizedb_list_tables_repair_tables_submit($form, &$form_state) {
+  _optimizedb_list_tables_operation_execute($form, $form_state, 'repair_table');
+}
+
+/**
+ * Implements hook_FORMID_submit().
+ */
+function optimizedb_list_tables_optimize_tables_submit($form, &$form_state) {
+  _optimizedb_list_tables_operation_execute($form, $form_state, 'optimize_table');
+}
+
+/**
+ * Performing operations on tables.
+ *
+ * @param array $form
+ *   The parameter with the hook - hook_FORMID_submit().
+ * @param array $form_state
+ *   The parameter with the hook - hook_FORMID_submit().
+ * @param string $operation
+ *   The operation to be performed with tables.
+ */
+function _optimizedb_list_tables_operation_execute($form, $form_state, $operation) {
+  $tables_selected = $form_state['values']['tables'];
+
+  if (db_driver() == 'mysql') {
+    if (!empty($tables_selected)) {
+      $table_origin = $form['tables']['#options'];
+      $errors = array();
+      $count = 0;
+
+      foreach ($tables_selected as $table => $value) {
+        if ($table == $value && is_string($value) && isset($table_origin[$value])) {
+          $table_name = $table_origin[$value]['name']['data'];
+
+          switch ($operation) {
+            case 'check_table':
+              $operation_name = 'CHECK TABLE';
+              break;
+
+            case 'repair_table':
+              $operation_name = 'REPAIR TABLE';
+              break;
+
+            case 'optimize_table':
+              $operation_name = 'OPTIMIZE TABLE';
+              break;
+          }
+
+          $operation_result = db_query($operation_name . ' {' . $table_name . '}')->fetchAll();
+
+          foreach ($operation_result as $result) {
+            if (isset($result->Msg_type) && in_array(strtolower($result->Msg_type), array('error', 'warning'))) {
+              $errors[] = array(
+                array('data' => $table_name),
+                array('data' => $result->Msg_type),
+                array('data' => $result->Msg_text),
+              );
+            }
+          }
+
+          $count++;
+        }
+      }
+
+      if ($count == 0) {
+        drupal_set_message(t('To execute, you must select at least one table from the list.'), 'error');
+      }
+      else {
+        $_SESSION['optimizedb_list_tables_operations'] = $errors;
+      }
+    }
+    else {
+      drupal_set_message(t('To execute, you must select at least one table from the list.'), 'error');
+    }
+  }
+  else {
+    drupal_set_message(t('Function to check tables is only available for databases MySQL.'), 'error');
+  }
 }
 
 /**
@@ -421,16 +575,18 @@ function optimizedb_optimize_batch_finished($success, $results, $operations) {
   if ($success) {
     if (isset($results['error'])) {
       $message_error = 'When optimizing experiencing errors with tables:
-        @tables. You need as quickly as possible to check the table. Other tables
+        @tables. You need as quickly as possible <a href="@url">to check the table</a>. Other tables
         were successfully optimized.';
       if (PHP_SAPI == 'cli') {
         drush_log(dt($message_error, array(
           '@tables' => implode(', ', $results['error']),
+          '@url' => url('admin/config/development/optimizedb/list_tables'),
         )), 'error');
       }
       else {
         drupal_set_message(t($message_error, array(
           '@tables' => implode(', ', $results['error']),
+          '@url' => url('admin/config/development/optimizedb/list_tables'),
         )), 'error');
       }
     }

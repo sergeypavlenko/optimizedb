@@ -73,3 +73,10 @@ function optimizedb_requirements($phase) {
 function optimizedb_update_7100() {
   cache_clear_all('optimizedb_tables_status');
 }
+
+/**
+ * Implements of hook_update_N().
+ */
+function optimizedb_update_7101() {
+  menu_rebuild();
+}
