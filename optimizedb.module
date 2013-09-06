@@ -19,11 +19,16 @@ function optimizedb_menu() {
     'access arguments' => array('administer optimizedb settings'),
     'type' => MENU_NORMAL_ITEM,
   );
+  $items['admin/config/development/optimizedb/settings'] = array(
+    'title' => 'Database Optimization',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
 
   $items['admin/config/development/optimizedb/hide'] = array(
     'title' => 'Hide notification',
     'page callback' => 'optimizedb_hide_notification',
     'access arguments' => array('administer optimizedb settings'),
+    'type' => MENU_LOCAL_TASK,
   );
 
   $items['admin/config/development/optimizedb/list_tables'] = array(
@@ -31,6 +36,7 @@ function optimizedb_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('optimizedb_list_tables'),
     'access arguments' => array('administer optimizedb settings'),
+    'type' => MENU_LOCAL_TASK,
   );
 
   return $items;
