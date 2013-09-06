@@ -324,7 +324,7 @@ function _optimizedb_list_tables_operation_execute($form, $form_state, $operatio
 
       foreach ($tables_selected as $table => $value) {
         if ($table == $value && is_string($value) && isset($table_origin[$value])) {
-          $table_name = $table_origin[$value]['name']['data'];
+          $table_name = $table_origin[$value]['name'];
 
           switch ($operation) {
             case 'check_table':
@@ -395,10 +395,10 @@ function _optimizedb_list_tables_sort($a, $b) {
   $sort = &drupal_static(__FUNCTION__ . ':sort');
 
   if ($sort == 'asc') {
-    return $a['size_byte']['data'] > $b['size_byte']['data'];
+    return $a['size_byte'] > $b['size_byte'];
   }
 
-  return $a['size_byte']['data'] < $b['size_byte']['data'];
+  return $a['size_byte'] < $b['size_byte'];
 }
 
 /**
@@ -482,10 +482,10 @@ function _optimizedb_tables_list() {
 
     foreach ($tables as $table) {
       $length = $table->Data_length + $table->Index_length;
-      $result[] = array(
-        'name' => array('data' => $table->Name),
-        'size' => array('data' => _optimizedb_format_size($length)),
-        'size_byte' => array('data' => $length),
+      $result[$table->Name] = array(
+        'name' => $table->Name,
+        'size' => _optimizedb_format_size($length),
+        'size_byte' => $length,
       );
 
       $size_tables += $length;
