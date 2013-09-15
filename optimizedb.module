@@ -637,9 +637,27 @@ function optimizedb_admin_clear_table_submit($form, &$form_state) {
  * Cleaning table cache_form and cleaning time record.
  */
 function _optimizedb_clear_table() {
-  db_query("DELETE FROM {cache_form} WHERE expire < :timestamp", array(
-    ':timestamp' => REQUEST_TIME,
-  ));
+  $count_all = (int) db_select('cache_form')
+    ->countQuery()
+    ->execute()
+    ->fetchField();
+  if ($count_all !== 0) {
+    $count_expire = (int) db_select('cache_form')
+      ->condition('expire', REQUEST_TIME, '<')
+      ->countQuery()
+      ->execute()
+      ->fetchField();
+
+    if ($count_all == $count_expire) {
+      db_truncate('cache_form')->execute();
+    }
+    else {
+      db_delete('cache_form')
+        ->condition('expire', REQUEST_TIME, '<')
+        ->execute();
+    }
+  }
+
   variable_set('optimizedb_last_clear', REQUEST_TIME);
 }
 
