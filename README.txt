@@ -1,43 +1,40 @@
-Known issue on sites with Drupal - table cache_form overgrowth. The table
-stores the forms cache site and Drupal cache_form not clear when the
-Cron-tasks. cache_form may be large, in many times greater than the total
-size of all data in the database. Very often this problem, site owners know
-when they are running out of disk space, and the problem starts with the site.
+OptimizeDB Module
 
-The module "OptimizeDB" can for Cron to clean the table cache_form,
-the cleaning operation table is safe, even in event of a fall database server
-problems on the website will not be. Also, cleaning cache_form can
-run independently from the admin area.
+Author:
+Sergey Pavlenko
 
-The module "OptimizeDB" is also able to optimize the database tables and
-display their sizes. Optimizing the tables on Cron, can not perform,
-because it may cause problems with the database, so this setting is
-not available. However, you can configure the notification of the need
-to perform an optimization of tables. When the time comes, the site will
-display a message about the need to perform an optimization, the message can
-be hidden or perform optimization, and the message will disappear.
+DESCRIPTION
+-----------
+One of known issue Drupal sites is table cache_form overgrowth (see issue
+https://drupal.org/node/1506196). This table stores filled forms in cache_form
+table but it did not clear while running cron tasks, so size of this table could
+be much more greater than other tables in database, which could cause lack of
+disc space on hosting server
 
-If a database table of your site work on the engine InnoDB, it is necessary
-from time to time to optimize the table. The fact that the disk on which
-the database resides, and tables may greatly be fragmented in the course
-of work and to get rid of of fragmentation, it is necessary to carry
-out optimization.
 
-I advise you before optimize performance, if your server often have problems
-with the database server, make a backup of the database. The danger of losing
-data when the through module the optimization of the tables is the same as in
-the performance optimization through PHPMyAdmin.
+OptimizeDB module clears outdated records in cache_form table during cron task
+run in safe mode. You could clean cache_form table from admin area too
 
-Destination of the module OptimizeDB:
+The module "OptimizeDB" is also able to optimize selected database tables and
+display their sizes on demand. Automatic optimizing of tables during cron tasks
+is not available because it may cause problems with the database and crash
+tables. However, you can configure the notification about need of table
+optimization.
 
-Cleaning the table cache_form
-Cleaning the tables on Cron
-Optimize database tables
+If your server have often  problems with the database server, make a backup of
+the database before optimization run. The danger of losing data using module for
+ optimization the same as while using PHPMyAdmin.
 
-Features:
+Module OptimizeDB provide such features:
+1. Ability to clean cache_from in administrative page or do it by cron.
+2. Ability to optimize all database’s tables and display its sizes.
+3. Configuration of notification about necessity to perform maintenance tasks.
+4. Perform check and repair operation with tables.
+5. Prevent crashing tables when perform all maintained actions.
 
-The output size of the tables in the database
-Working with MySQL and PgSQL
+Additional features:
+1. Work with MySQL and PgSQL
+2. Execute operations with Drush
 
 Similar projects:
 
