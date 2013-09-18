@@ -286,21 +286,21 @@ function optimizedb_list_tables($form, &$form_state) {
  * Implements hook_FORMID_submit().
  */
 function optimizedb_list_tables_check_tables_submit($form, &$form_state) {
-  _optimizedb_list_tables_operation_execute($form, $form_state, 'check_table');
+  _optimizedb_list_tables_operation_execute($form, $form_state, 'CHECK TABLE');
 }
 
 /**
  * Implements hook_FORMID_submit().
  */
 function optimizedb_list_tables_repair_tables_submit($form, &$form_state) {
-  _optimizedb_list_tables_operation_execute($form, $form_state, 'repair_table');
+  _optimizedb_list_tables_operation_execute($form, $form_state, 'REPAIR TABLE');
 }
 
 /**
  * Implements hook_FORMID_submit().
  */
 function optimizedb_list_tables_optimize_tables_submit($form, &$form_state) {
-  _optimizedb_list_tables_operation_execute($form, $form_state, 'optimize_table');
+  _optimizedb_list_tables_operation_execute($form, $form_state, 'OPTIMIZE TABLE');
 }
 
 /**
@@ -310,49 +310,27 @@ function optimizedb_list_tables_optimize_tables_submit($form, &$form_state) {
  *   The parameter with the hook - hook_FORMID_submit().
  * @param array $form_state
  *   The parameter with the hook - hook_FORMID_submit().
- * @param string $operation
+ * @param string $operation_name
  *   The operation to be performed with tables.
  */
-function _optimizedb_list_tables_operation_execute($form, $form_state, $operation) {
+function _optimizedb_list_tables_operation_execute($form, $form_state, $operation_name) {
   $tables_selected = $form_state['values']['tables'];
 
   if (db_driver() == 'mysql') {
     if (!empty($tables_selected)) {
       $table_origin = $form['tables']['#options'];
-      $errors = array();
       $count = 0;
 
       foreach ($tables_selected as $table => $value) {
         if ($table == $value && is_string($value) && isset($table_origin[$value])) {
           $table_name = $table_origin[$value]['name'];
 
-          switch ($operation) {
-            case 'check_table':
-              $operation_name = 'CHECK TABLE';
-              break;
+          $operations[] = array('_optimizedb_list_tables_operation_execute_run', array(array(
+            'name' => $table_name,
+            'operation' => $operation_name,
+          )));
 
-            case 'repair_table':
-              $operation_name = 'REPAIR TABLE';
-              break;
-
-            case 'optimize_table':
-              $operation_name = 'OPTIMIZE TABLE';
-              break;
-          }
-
-          $operation_result = db_query($operation_name . ' ' . $table_name)->fetchAll();
-
-          foreach ($operation_result as $result) {
-            if (isset($result->Msg_type) && in_array(strtolower($result->Msg_type), array('error', 'warning'))) {
-              $errors[] = array(
-                array('data' => $table_name),
-                array('data' => $result->Msg_type),
-                array('data' => $result->Msg_text),
-              );
-            }
-          }
-
-          $count++;
+          ++$count;
         }
       }
 
@@ -360,7 +338,12 @@ function _optimizedb_list_tables_operation_execute($form, $form_state, $operatio
         drupal_set_message(t('To execute, you must select at least one table from the list.'), 'error');
       }
       else {
-        $_SESSION['optimizedb_list_tables_operations'] = $errors;
+        $batch = array(
+          'operations' => $operations,
+          'finished' => '_optimizedb_list_tables_operation_execute_finished',
+        );
+
+        batch_set($batch);
       }
     }
     else {
@@ -369,6 +352,41 @@ function _optimizedb_list_tables_operation_execute($form, $form_state, $operatio
   }
   else {
     drupal_set_message(t('Function to check tables is only available for databases MySQL.'), 'error');
+  }
+}
+
+/**
+ * Batch function.
+ */
+function _optimizedb_list_tables_operation_execute_run($param, &$context) {
+  $operation_result = db_query($operation_name . ' ' . $table_name)->fetchAll();
+
+  foreach ($operation_result as $result) {
+    if (isset($result->Msg_type) && in_array(strtolower($result->Msg_type), array('error', 'warning'))) {
+      $context['results']['errors'][] = array(
+        array('data' => $param['name']),
+        array('data' => $result->Msg_type),
+        array('data' => $result->Msg_text),
+      );
+    }
+  }
+}
+
+/**
+ * Completion operation.
+ */
+function _optimizedb_list_tables_operation_execute_finished($success, $results, $operations) {
+  if ($success) {
+    if (isset($results['errors'])) {
+      $result = $results['errors'];
+    }
+    else {
+      $result = array();
+    }
+    $_SESSION['optimizedb_list_tables_operations'] = $result;
+  }
+  else {
+    drupal_set_message(t('Completed with errors.'), 'error');
   }
 }
 
