@@ -340,7 +340,7 @@ function _optimizedb_list_tables_operation_execute($form, $form_state, $operatio
               break;
           }
 
-          $operation_result = db_query($operation_name . ' {' . $table_name . '}')->fetchAll();
+          $operation_result = db_query($operation_name . ' ' . $table_name)->fetchAll();
 
           foreach ($operation_result as $result) {
             if (isset($result->Msg_type) && in_array(strtolower($result->Msg_type), array('error', 'warning'))) {
@@ -545,7 +545,7 @@ function optimizedb_optimize_batch_run($table, &$context) {
   switch (db_driver()) {
     case 'mysql':
       try {
-        $result = db_query('OPTIMIZE TABLE {' . $table . '}')->fetchObject();
+        $result = db_query('OPTIMIZE TABLE ' . $table)->fetchObject();
         if (isset($result->Msg_type) && in_array(strtolower($result->Msg_type), array('error', 'warning'))) {
           $status = 'error';
         }
@@ -557,7 +557,7 @@ function optimizedb_optimize_batch_run($table, &$context) {
 
     case 'pgsql':
       try {
-        db_query('VACUUM ANALYZE {' . $table . '}');
+        db_query('VACUUM ANALYZE ' . $table);
       }
       catch (Exception $e) {
         $status = 'error';
