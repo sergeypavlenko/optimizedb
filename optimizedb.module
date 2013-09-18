@@ -359,7 +359,7 @@ function _optimizedb_list_tables_operation_execute($form, $form_state, $operatio
  * Batch function.
  */
 function _optimizedb_list_tables_operation_execute_run($param, &$context) {
-  $operation_result = db_query($operation_name . ' ' . $table_name)->fetchAll();
+  $operation_result = db_query($param['operation'] . ' ' . $param['name'])->fetchAll();
 
   foreach ($operation_result as $result) {
     if (isset($result->Msg_type) && in_array(strtolower($result->Msg_type), array('error', 'warning'))) {
