@@ -7,11 +7,15 @@
  * Optimizing the site database and clearing tables cache_form.
  */
 
+if (!defined('REQUEST_TIME')) {
+  define('REQUEST_TIME', (int) $_SERVER['REQUEST_TIME']);
+}
+
 /**
  * Implements hook_menu().
  */
 function optimizedb_menu() {
-  $items['admin/config/development/optimizedb'] = array(
+  $items['admin/settings/optimizedb'] = array(
     'title' => 'Database Optimization',
     'description' => 'Optimizing the site database and clearing tables cache_form.',
     'page callback' => 'drupal_get_form',
@@ -19,19 +23,19 @@ function optimizedb_menu() {
     'access arguments' => array('administer optimizedb settings'),
     'type' => MENU_NORMAL_ITEM,
   );
-  $items['admin/config/development/optimizedb/settings'] = array(
+  $items['admin/settings/optimizedb/settings'] = array(
     'title' => 'Database Optimization',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
-  $items['admin/config/development/optimizedb/hide'] = array(
+  $items['admin/settings/optimizedb/hide'] = array(
     'title' => 'Hide notification',
     'page callback' => 'optimizedb_hide_notification',
     'access arguments' => array('administer optimizedb settings'),
     'type' => MENU_LOCAL_TASK,
   );
 
-  $items['admin/config/development/optimizedb/list_tables'] = array(
+  $items['admin/settings/optimizedb/list_tables'] = array(
     'title' => 'List of tables in the database',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('optimizedb_list_tables'),
@@ -43,13 +47,19 @@ function optimizedb_menu() {
 }
 
 /**
- * Implements hook_permission().
+ * Implements hook_perm().
  */
-function optimizedb_permission() {
+function optimizedb_perm() {
+  return array('administer optimizedb settings');
+}
+
+/**
+ * Implements hook_theme().
+ */
+function optimizedb_theme() {
   return array(
-    'administer optimizedb settings' => array(
-      'title' => t('Database Optimization'),
-      'description' => t('Startup and configuration module.'),
+    'optimizedb_list_tables' => array(
+      'arguments' => array('form' => NULL),
     ),
   );
 }
@@ -103,21 +113,21 @@ function optimizedb_admin() {
     ),
   );
 
-  switch (db_driver()) {
+  switch (optimizedb_db_driver()) {
     case 'mysql':
-      $table_length = db_query("SHOW TABLE STATUS LIKE '{cache_form}';")->fetchObject();
+      $table_length = db_fetch_object(db_query("SHOW TABLE STATUS LIKE '{cache_form}';"));
       break;
 
     case 'pgsql':
-      $table_length = db_query("SELECT pg_total_relation_size('{cache_form}') AS \"Data_length\",
-        0 AS \"Index_length\"")->fetchObject();
+      $table_length = db_fetch_object(db_query("SELECT pg_total_relation_size('{cache_form}') AS \"Data_length\",
+        0 AS \"Index_length\""));
       break;
   }
-
+  
   $table_length = $table_length->Data_length + $table_length->Index_length;
 
   $form['optimizedb_auto']['lenght'] = array(
-    '#markup' => t('The current size of the table <strong>@length</strong>.', array(
+    '#value' => t('The current size of the table <strong>@length</strong>.', array(
       '@length' => _optimizedb_format_size($table_length),
     )),
   );
@@ -131,7 +141,7 @@ function optimizedb_admin() {
 
   $form['optimize_table']['optimizedb_optimization_period'] = array(
     '#type' => 'select',
-    '#title' => t('Receive notification of the need to optimize the database, every.'),
+    '#title' => t('Receive notification of the need to optimize the database, every'),
     '#description' => t('Last run: @date ago.', array(
       '@date' => _optimizedb_date($last_optimization),
     )),
@@ -151,10 +161,10 @@ function optimizedb_admin() {
 
   $form['optimize_table']['tables'] = array(
     '#type' => 'item',
-    '#title' => t('Current information on all database tables.'),
-    '#markup' => t('The size of all tables in the database: <b>@size</b>. View the size of the tables separately, you can on the page - <a href="@url">List of tables in the database</a>.', array(
+    '#title' => t('Current information on all database tables'),
+    '#value' => t('The size of all tables in the database: <b>@size</b>. View the size of the tables separately, you can on the page - <a href="@url">List of tables in the database</a>.', array(
       '@size' => $size_tables,
-      '@url' => url('admin/config/development/optimizedb/list_tables'),
+      '@url' => url('admin/settings/optimizedb/list_tables'),
     )),
   );
 
@@ -194,32 +204,22 @@ function optimizedb_hide_notification() {
  * @return string
  *   Table with a list of tables.
  */
-function optimizedb_list_tables($form, &$form_state) {
-  $headers = array(
-    'name' => array(
-      'data' => t('Table name'),
-    ),
-    'size' => array(
-      'data' => t('Table size'),
-      'field' => 'size',
-      'sort' => 'desc',
+function optimizedb_list_tables() {
+  $form = array();
+
+  $form['header'] = array(
+    '#type' => 'value',
+    '#value' => array(
+       theme('table_select_header_cell'),
+       array('data' => t('Table name')),
+       array('data' => t('Table size'), 'field' => 'size', 'sort' => 'asc'),
     ),
   );
-
+  
   $rows = _optimizedb_tables_list();
 
-  // Desc or asc.
-  $sort = tablesort_get_sort($headers);
-
-  $sort_table = &drupal_static('_optimizedb_list_tables_sort:sort');
-  $sort_table = $sort;
-
-  // Sort descending and ascending.
   usort($rows, '_optimizedb_list_tables_sort');
-
-  // Parameter "size_byte" us only needed to sort, now his unit to remove.
-  $rows = array_map('optimizedb_list_tables_remove_site_byte', $rows);
-
+  
   $operations_tables_result = isset($_SESSION['optimizedb_list_tables_operations']) ? $_SESSION['optimizedb_list_tables_operations'] : NULL;
 
   if (!is_null($operations_tables_result)) {
@@ -233,21 +233,21 @@ function optimizedb_list_tables($form, &$form_state) {
       );
 
       $form['operations_tables']['errors'] = array(
-        '#markup' => theme('table', array(
-          'header' => array(
+        '#value' => theme('table', array(
+          array(
             array('data' => t('Table name')),
             array('data' => t('Type of problem')),
             array('data' => t('Information about the problem')),
           ),
-          'rows' => $operations_tables_result,
+          $operations_tables_result,
          )),
       );
     }
   }
 
   $_SESSION['optimizedb_list_tables_operations'] = NULL;
-
-  if (db_driver() == 'mysql') {
+  
+  if (optimizedb_db_driver() == 'mysql') {
     $form['operations'] = array(
       '#type' => 'fieldset',
       '#title' => t('Operations with tables:'),
@@ -271,33 +271,58 @@ function optimizedb_list_tables($form, &$form_state) {
       '#submit' => array('optimizedb_list_tables_optimize_tables_submit'),
     );
   }
-
+  
+  if (!empty($rows)) {
+    foreach ($rows as $key => $row) {
+      $options[$row['name']] = '';
+      $form['name'][$row['name']] = array('#value' => $row['name']);
+      $form['size'][$row['name']] = array('#value' => $row['size']);
+    }
+  }
+ 
   $form['tables'] = array(
-    '#type' => 'tableselect',
-    '#header' => $headers,
-    '#options' => $rows,
-    '#empty' => t('No content available.'),
+    '#type' => 'checkboxes',
+    '#options' => isset($options) ? $options : array(),
   );
-
+ 
   return $form;
 }
 
 /**
- * Implements hook_FORMID_submit().
+ * Theming table with a list of tables - optimizedb_list_tables().
+ */
+function theme_optimizedb_list_tables($form) {
+  $rows = array();
+  foreach (element_children($form['tables']) as $key) {
+    $rows[] = array(
+      drupal_render($form['tables'][$key]),
+      drupal_render($form['name'][$key]),
+      drupal_render($form['size'][$key]),
+    );
+  }
+
+  $output = drupal_render($form);
+  $output .= theme('table', $form['header']['#value'], $rows);
+
+  return $output;
+}
+
+/**
+ * Implements hook_FORM_ID_submit().
  */
 function optimizedb_list_tables_check_tables_submit($form, &$form_state) {
   _optimizedb_list_tables_operation_execute($form, $form_state, 'CHECK TABLE');
 }
 
 /**
- * Implements hook_FORMID_submit().
+ * Implements hook_FORM_ID_submit().
  */
 function optimizedb_list_tables_repair_tables_submit($form, &$form_state) {
   _optimizedb_list_tables_operation_execute($form, $form_state, 'REPAIR TABLE');
 }
 
 /**
- * Implements hook_FORMID_submit().
+ * Implements hook_FORM_ID_submit().
  */
 function optimizedb_list_tables_optimize_tables_submit($form, &$form_state) {
   _optimizedb_list_tables_operation_execute($form, $form_state, 'OPTIMIZE TABLE');
@@ -307,26 +332,24 @@ function optimizedb_list_tables_optimize_tables_submit($form, &$form_state) {
  * Performing operations on tables.
  *
  * @param array $form
- *   The parameter with the hook - hook_FORMID_submit().
+ *   The parameter with the hook - hook_FORM_ID_submit().
  * @param array $form_state
- *   The parameter with the hook - hook_FORMID_submit().
+ *   The parameter with the hook - hook_FORM_ID_submit().
  * @param string $operation_name
  *   The operation to be performed with tables.
  */
 function _optimizedb_list_tables_operation_execute($form, $form_state, $operation_name) {
   $tables_selected = $form_state['values']['tables'];
 
-  if (db_driver() == 'mysql') {
+  if (optimizedb_db_driver() == 'mysql') {
     if (!empty($tables_selected)) {
-      $table_origin = $form['tables']['#options'];
+      $table_origin = $form['name'];
       $count = 0;
 
       foreach ($tables_selected as $table => $value) {
-        if ($table == $value && is_string($value) && isset($table_origin[$value])) {
-          $table_name = $table_origin[$value]['name'];
-
+        if ($table === $value) {
           $operations[] = array('_optimizedb_list_tables_operation_execute_run', array(array(
-            'name' => $table_name,
+            'name' => $table,
             'operation' => $operation_name,
           )));
 
@@ -359,9 +382,9 @@ function _optimizedb_list_tables_operation_execute($form, $form_state, $operatio
  * Batch function.
  */
 function _optimizedb_list_tables_operation_execute_run($param, &$context) {
-  $operation_result = db_query($param['operation'] . ' ' . $param['name'])->fetchAll();
+  $operation_result = db_query($param['operation'] . ' ' . $param['name']);
 
-  foreach ($operation_result as $result) {
+  while ($result = db_fetch_object($operation_result)) {
     if (isset($result->Msg_type) && in_array(strtolower($result->Msg_type), array('error', 'warning'))) {
       $context['results']['errors'][] = array(
         array('data' => $param['name']),
@@ -391,26 +414,16 @@ function _optimizedb_list_tables_operation_execute_finished($success, $results, 
 }
 
 /**
- * Remove the "size_byte" of the array.
- *
- * @param array $row
- *   Array.
- *
- * @return array
- *   Array.
- */
-function optimizedb_list_tables_remove_site_byte($row) {
-  unset($row['size_byte']);
-  return $row;
-}
-
-/**
  * Sorting table data size.
  *
  * Callback for usort() in optimizedb_list_tables().
  */
 function _optimizedb_list_tables_sort($a, $b) {
-  $sort = &drupal_static(__FUNCTION__ . ':sort');
+  static $sort = FALSE;
+  
+  if (!$sort) {
+    $sort = tablesort_get_sort(array());
+  }
 
   if ($sort == 'asc') {
     return $a['size_byte'] > $b['size_byte'];
@@ -476,11 +489,9 @@ function _optimizedb_date($timestamp) {
  *   An array with a list of database tables.
  */
 function _optimizedb_tables_list() {
-  switch (db_driver()) {
+  switch (optimizedb_db_driver()) {
     case 'mysql':
-      $tables = db_query("SHOW TABLE STATUS", array(), array(
-        'fetch' => PDO::FETCH_OBJ,
-      ));
+      $tables = db_query("SHOW TABLE STATUS");
       break;
 
     case 'pgsql':
@@ -489,16 +500,16 @@ function _optimizedb_tables_list() {
         0 as \"Index_length\"
         FROM information_schema.tables
         WHERE table_schema = 'public'
-        ORDER BY table_name", array(), array('fetch' => PDO::FETCH_OBJ));
+        ORDER BY table_name");
       break;
   }
-
+  
   $result = array();
 
   if ($tables) {
     $size_tables = 0;
-
-    foreach ($tables as $table) {
+    
+    while ($table = db_fetch_object($tables)) {
       $length = $table->Data_length + $table->Index_length;
       $result[$table->Name] = array(
         'name' => $table->Name,
@@ -517,25 +528,24 @@ function _optimizedb_tables_list() {
 }
 
 /**
- * Implements hook_FORMID_submit().
+ * Implements hook_FORM_ID_submit().
  */
 function optimizedb_admin_optimize_table_submit($form, &$form_state) {
-  switch (db_driver()) {
+  switch (optimizedb_db_driver()) {
     case 'mysql':
-      $tables = db_query("SHOW TABLES", array(), array(
-        'fetch' => PDO::FETCH_NUM,
-      ));
+      $tables = db_query("SHOW TABLES");
       break;
 
     case 'pgsql':
       $tables = db_query("SELECT table_name
         FROM information_schema.tables
         WHERE table_schema = 'public'
-        ORDER BY table_name", array(), array('fetch' => PDO::FETCH_NUM));
+        ORDER BY table_name");
       break;
   }
 
-  foreach ($tables as $table) {
+  while ($table = db_fetch_array($tables)) {
+    $table = array_values($table);
     $operations[] = array('optimizedb_optimize_batch_run', array($table[0]));
   }
 
@@ -560,10 +570,10 @@ function optimizedb_optimize_batch_run($table, &$context) {
   // Standard the status the result operation.
   $status = 'success';
 
-  switch (db_driver()) {
+  switch (optimizedb_db_driver()) {
     case 'mysql':
       try {
-        $result = db_query('OPTIMIZE TABLE ' . $table)->fetchObject();
+        $result = db_fetch_object(db_query('OPTIMIZE TABLE %s', $table));
         if (isset($result->Msg_type) && in_array(strtolower($result->Msg_type), array('error', 'warning'))) {
           $status = 'error';
         }
@@ -604,13 +614,13 @@ function optimizedb_optimize_batch_finished($success, $results, $operations) {
       if (PHP_SAPI == 'cli') {
         drush_log(dt($message_error, array(
           '@tables' => implode(', ', $results['error']),
-          '@url' => url('admin/config/development/optimizedb/list_tables'),
+          '@url' => url('admin/settings/optimizedb/list_tables'),
         )), 'error');
       }
       else {
         drupal_set_message(t($message_error, array(
           '@tables' => implode(', ', $results['error']),
-          '@url' => url('admin/config/development/optimizedb/list_tables'),
+          '@url' => url('admin/settings/optimizedb/list_tables'),
         )), 'error');
       }
     }
@@ -644,7 +654,7 @@ function optimizedb_optimize_batch_finished($success, $results, $operations) {
 }
 
 /**
- * Implements hook_FORMID_submit().
+ * Implements hook_FORM_ID_submit().
  */
 function optimizedb_admin_clear_table_submit($form, &$form_state) {
   _optimizedb_clear_table();
@@ -655,24 +665,15 @@ function optimizedb_admin_clear_table_submit($form, &$form_state) {
  * Cleaning table cache_form and cleaning time record.
  */
 function _optimizedb_clear_table() {
-  $count_all = (int) db_select('cache_form')
-    ->countQuery()
-    ->execute()
-    ->fetchField();
+  $count_all = (int) db_result(db_query("SELECT COUNT(*) FROM {cache_form}"));
   if ($count_all !== 0) {
-    $count_expire = (int) db_select('cache_form')
-      ->condition('expire', REQUEST_TIME, '<')
-      ->countQuery()
-      ->execute()
-      ->fetchField();
+    $count_expire = (int) db_result(db_query("SELECT COUNT(*) FROM {cache_form} WHERE expire < %d", REQUEST_TIME));
 
     if ($count_all == $count_expire) {
-      db_truncate('cache_form')->execute();
+      db_query("TRUNCATE {cache_form}");
     }
     else {
-      db_delete('cache_form')
-        ->condition('expire', REQUEST_TIME, '<')
-        ->execute();
+      db_query("DELETE FROM {cache_form} WHERE expire < %d", REQUEST_TIME);
     }
   }
 
@@ -706,4 +707,20 @@ function optimizedb_cron() {
       variable_set('optimizedb_notify_optimize', TRUE);
     }
   }
+}
+
+/**
+ * Output drivers database.
+ *
+ * @global string $db_type Name of the current database driver.
+ * @return string
+ */
+function optimizedb_db_driver() {
+  global $db_type;
+
+  if ($db_type == 'mysqli') {
+    $db_type = 'mysql';
+  }
+
+  return $db_type;
 }

@@ -55,8 +55,8 @@ function optimizedb_requirements($phase) {
       $requirements['optimizedb'] = array(
         'title' => $t('Database Optimization'),
         'description' => $t('You must perform <a href="@optimize_link">database optimization</a>. <a href="@hide_link">Hide notification</a>', array(
-          '@optimize_link' => url('admin/config/development/optimizedb'),
-          '@hide_link' => url('admin/config/development/optimizedb/hide'),
+          '@optimize_link' => url('admin/settings/optimizedb'),
+          '@hide_link' => url('admin/settings/optimizedb/hide'),
         )),
         'severity' => REQUIREMENT_ERROR,
         'value' => $time_optimization,
@@ -65,18 +65,4 @@ function optimizedb_requirements($phase) {
   }
 
   return $requirements;
-}
-
-/**
- * Implements of hook_update_N().
- */
-function optimizedb_update_7100() {
-  cache_clear_all('optimizedb_tables_status');
-}
-
-/**
- * Implements of hook_update_N().
- */
-function optimizedb_update_7101() {
-  menu_rebuild();
 }
