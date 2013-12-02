@@ -224,7 +224,7 @@ function optimizedb_list_tables($form, &$form_state) {
 
   if (!is_null($operations_tables_result)) {
     if ($operations_tables_result == array()) {
-      drupal_set_message('The operation completed successfully.');
+      drupal_set_message(t('The operation completed successfully.'));
     }
     else {
       $form['operations_tables'] = array(
