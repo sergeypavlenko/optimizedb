@@ -81,15 +81,38 @@ function optimizedb_admin() {
     '#submit' => array('optimizedb_admin_clear_table_submit'),
   );
 
+  $form['executing_commands']['clear_all'] = array(
+    '#type' => 'submit',
+    '#value' => t('Clear an entire table cache_form'),
+    '#submit' => array('optimizedb_admin_clear_table_all_submit'),
+  );
+
   $form['executing_commands']['optimize'] = array(
     '#type' => 'submit',
     '#value' => t('Optimize tables'),
     '#submit' => array('optimizedb_admin_optimize_table_submit'),
   );
 
+  $form['executing_commands']['info'] = array(
+    '#value' => t('<strong>Clear cache_form table</strong> - clear the cache in a table cache_form, which has expired.' .
+      '<br>' . 
+      '<strong>Clear an entire table cache_form</strong> - deleting all the cache in a table cache_form.'),
+    '#prefix' => '<div class="clearfix"></div>',
+  );
+
   $form['optimizedb_auto'] = array(
     '#type' => 'fieldset',
     '#title' => t('Automatic clear cache_form table.'),
+  );
+
+  $form['optimizedb_auto']['optimize_clear_type'] = array(
+    '#type' => 'select',
+    '#title' => t('Cache removal option'),
+    '#options' => array(
+      0 => t('Delete cache which expired'),
+      1 => t('Delete entire cache'),
+    ),
+    '#default_value' => variable_get('optimize_clear_type', 0),
   );
 
   $last_clear = variable_get('optimizedb_last_clear', 0);
@@ -657,23 +680,44 @@ function optimizedb_optimize_batch_finished($success, $results, $operations) {
  * Implements hook_FORM_ID_submit().
  */
 function optimizedb_admin_clear_table_submit($form, &$form_state) {
-  _optimizedb_clear_table();
+  _optimizedb_clear_table(0);
+  drupal_set_message(t('The table is cleared.'));
+}
+
+/**
+ * Implements hook_FORMID_submit().
+ */
+function optimizedb_admin_clear_table_all_submit($form, &$form_state) {
+  _optimizedb_clear_table(1);
   drupal_set_message(t('The table is cleared.'));
 }
 
 /**
  * Cleaning table cache_form and cleaning time record.
+ *
+ * @param int $type
+ *   0 - Delete cache which expired
+ *   1 - Delete entire cache
  */
-function _optimizedb_clear_table() {
-  $count_all = (int) db_result(db_query("SELECT COUNT(*) FROM {cache_form}"));
-  if ($count_all !== 0) {
-    $count_expire = (int) db_result(db_query("SELECT COUNT(*) FROM {cache_form} WHERE expire < %d", REQUEST_TIME));
+function _optimizedb_clear_table($type = NULL) {
+  if (is_null($type)) {
+    $type = variable_get('optimize_clear_type', 0);
+  }
 
-    if ($count_all == $count_expire) {
-      db_query("TRUNCATE {cache_form}");
-    }
-    else {
-      db_query("DELETE FROM {cache_form} WHERE expire < %d", REQUEST_TIME);
+  if ((int) $type == 1) {
+    db_query("TRUNCATE {cache_form}");
+  }
+  else {
+    $count_all = (int) db_result(db_query("SELECT COUNT(*) FROM {cache_form}"));
+    if ($count_all !== 0) {
+      $count_expire = (int) db_result(db_query("SELECT COUNT(*) FROM {cache_form} WHERE expire < %d", REQUEST_TIME));
+
+      if ($count_all == $count_expire) {
+        db_query("TRUNCATE {cache_form}");
+      }
+      else {
+        db_query("DELETE FROM {cache_form} WHERE expire < %d", REQUEST_TIME);
+      }
     }
   }
 
