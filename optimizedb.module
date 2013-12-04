@@ -677,6 +677,8 @@ function _optimizedb_clear_table() {
     }
   }
 
+  // Update size tables.
+  _optimizedb_tables_list();
   variable_set('optimizedb_last_clear', REQUEST_TIME);
 }
 
