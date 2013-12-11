@@ -255,15 +255,14 @@ function optimizedb_list_tables() {
         '#title' => t('Errors that arose during the operation:'),
       );
 
+      $header_errors = array(
+        array('data' => t('Table name')),
+        array('data' => t('Type of problem')),
+        array('data' => t('Information about the problem')),
+      );
+
       $form['operations_tables']['errors'] = array(
-        '#value' => theme('table', array(
-          array(
-            array('data' => t('Table name')),
-            array('data' => t('Type of problem')),
-            array('data' => t('Information about the problem')),
-          ),
-          $operations_tables_result,
-         )),
+        '#value' => theme('table', $header_errors, $operations_tables_result),
       );
     }
   }
