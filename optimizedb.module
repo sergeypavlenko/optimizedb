@@ -205,7 +205,7 @@ function optimizedb_hide_notification() {
     )));
   }
   else {
-    drupal_set_message(t('Alerts are not available'));
+    drupal_set_message(t('Alerts are not available.'));
   }
 
   return '';
