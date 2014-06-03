@@ -14,7 +14,7 @@ function optimizedb_enable() {
 }
 
 /**
- * Implements of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function optimizedb_uninstall() {
   variable_del('optimizedb_clear_period');
@@ -69,21 +69,21 @@ function optimizedb_requirements($phase) {
 }
 
 /**
- * Implements of hook_update_N().
+ * Implements hook_update_N().
  */
 function optimizedb_update_7100() {
   cache_clear_all('optimizedb_tables_status');
 }
 
 /**
- * Implements of hook_update_N().
+ * Implements hook_update_N().
  */
 function optimizedb_update_7101() {
   menu_rebuild();
 }
 
 /**
- * Implements of hook_update_N().
+ * Implements hook_update_N().
  */
 function optimizedb_update_7102() {
   $clear_type = variable_get('optimize_clear_type', 0);
