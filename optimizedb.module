@@ -7,6 +7,12 @@
  * Optimizing the site database and clearing tables cache_form.
  */
 
+// Delete cache in table "cache_form" which expired.
+define('OPTIMIZEDB_CLEAR_EXPIRED_CACHE', 0);
+
+// Delete entire cache in table "cache_form".
+define('OPTIMIZEDB_CLEAR_ENTIRE_CACHE', 1);
+
 /**
  * Implements hook_menu().
  */
@@ -139,7 +145,7 @@ function optimizedb_admin() {
 
   $form['optimizedb_auto']['lenght'] = array(
     '#markup' => t('The current size of the table <strong>@length</strong>.', array(
-      '@length' => _optimizedb_format_size($table_length),
+      '@length' => format_size($table_length),
     )),
   );
 
@@ -168,7 +174,7 @@ function optimizedb_admin() {
     ),
   );
 
-  $size_tables = _optimizedb_format_size(variable_get('optimizedb_tables_size', 0));
+  $size_tables = format_size(variable_get('optimizedb_tables_size', 0));
 
   $form['optimize_table']['tables'] = array(
     '#type' => 'item',
@@ -227,7 +233,7 @@ function optimizedb_list_tables($form, &$form_state) {
     ),
   );
 
-  $rows = _optimizedb_tables_list();
+  $tables = _optimizedb_tables_list();
 
   // Desc or asc.
   $sort = tablesort_get_sort($headers);
@@ -236,10 +242,16 @@ function optimizedb_list_tables($form, &$form_state) {
   $sort_table = $sort;
 
   // Sort descending and ascending.
-  usort($rows, '_optimizedb_list_tables_sort');
+  usort($tables, '_optimizedb_list_tables_sort');
 
-  // Parameter "size_byte" us only needed to sort, now his unit to remove.
-  $rows = array_map('optimizedb_list_tables_remove_site_byte', $rows);
+  $rows = array();
+
+  foreach ($tables as $table) {
+    // Parameter "size_byte" us only needed to sort, now his unit to remove.
+    unset($table['size_byte']);
+
+    $rows[$table['name']] = $table;
+  }
 
   $operations_tables_result = isset($_SESSION['optimizedb_list_tables_operations']) ? $_SESSION['optimizedb_list_tables_operations'] : NULL;
 
@@ -342,10 +354,8 @@ function _optimizedb_list_tables_operation_execute($form, $form_state, $operatio
       $table_origin = $form['tables']['#options'];
       $count = 0;
 
-      foreach ($tables_selected as $table => $value) {
-        if ($table == $value && is_string($value) && isset($table_origin[$value])) {
-          $table_name = $table_origin[$value]['name'];
-
+      foreach ($tables_selected as $table_name => $selected) {
+        if ($table_name === $selected) {
           $operations[] = array('_optimizedb_list_tables_operation_execute_run', array(array(
             'name' => $table_name,
             'operation' => $operation_name,
@@ -412,20 +422,6 @@ function _optimizedb_list_tables_operation_execute_finished($success, $results, 
 }
 
 /**
- * Remove the "size_byte" of the array.
- *
- * @param array $row
- *   Array.
- *
- * @return array
- *   Array.
- */
-function optimizedb_list_tables_remove_site_byte($row) {
-  unset($row['size_byte']);
-  return $row;
-}
-
-/**
  * Sorting table data size.
  *
  * Callback for usort() in optimizedb_list_tables().
@@ -438,35 +434,6 @@ function _optimizedb_list_tables_sort($a, $b) {
   }
 
   return $a['size_byte'] < $b['size_byte'];
-}
-
-/**
- * Convert bytes to the usual size for people.
- * 
- * @param int $size
- *   Size in bytes.
- * 
- * @return string
- *   The correct size.
- */
-function _optimizedb_format_size($size) {
-  $metrics[0] = 'Byte';
-  $metrics[1] = 'KB';
-  $metrics[2] = 'MB';
-  $metrics[3] = 'GB';
-  $metrics[4] = 'TB';
-  $metric = 0;
-
-  while (floor($size / 1024) > 0) {
-    ++$metric;
-    $size /= 1024;
-  }
-
-  $ret = (round($size, 1)
-    . ' '
-    . (isset($metrics[$metric]) ? $metrics[$metric] : '??'));
-
-  return $ret;
 }
 
 /**
@@ -523,7 +490,7 @@ function _optimizedb_tables_list() {
       $length = $table->Data_length + $table->Index_length;
       $result[$table->Name] = array(
         'name' => $table->Name,
-        'size' => _optimizedb_format_size($length),
+        'size' => format_size($length),
         'size_byte' => $length,
       );
 
@@ -668,7 +635,7 @@ function optimizedb_optimize_batch_finished($success, $results, $operations) {
  * Implements hook_FORMID_submit().
  */
 function optimizedb_admin_clear_table_submit($form, &$form_state) {
-  _optimizedb_clear_table(0);
+  _optimizedb_clear_cache_form_table(OPTIMIZEDB_CLEAR_EXPIRED_CACHE);
   drupal_set_message(t('The table is cleared.'));
 }
 
@@ -676,18 +643,19 @@ function optimizedb_admin_clear_table_submit($form, &$form_state) {
  * Implements hook_FORMID_submit().
  */
 function optimizedb_admin_clear_table_all_submit($form, &$form_state) {
-  _optimizedb_clear_table(1);
+  _optimizedb_clear_cache_form_table(OPTIMIZEDB_CLEAR_ENTIRE_CACHE);
   drupal_set_message(t('The table is cleared.'));
 }
 
 /**
  * Cleaning table cache_form and cleaning time record.
  *
- * @param int $type
- *   0 - Delete cache which expired
- *   1 - Delete entire cache
+ * @param mixed $type
+ *   NULL - Default type, which is selected by the user.
+ *   OPTIMIZEDB_CLEAR_EXPIRED_CACHE - Delete cache which expired
+ *   OPTIMIZEDB_CLEAR_ENTIRE_CACHE - Delete entire cache
  */
-function _optimizedb_clear_table($type = NULL) {
+function _optimizedb_clear_cache_form_table($type = NULL) {
   if (is_null($type)) {
     $type = variable_get('optimizedb_clear_type', 0);
   }
@@ -735,7 +703,7 @@ function optimizedb_cron() {
       ($last_clear == 0 ? REQUEST_TIME : $last_clear));
 
     if ($clear_period == 100 || $time_next_clear <= REQUEST_TIME) {
-      _optimizedb_clear_table();
+      _optimizedb_clear_cache_form_table();
     }
   }
 
