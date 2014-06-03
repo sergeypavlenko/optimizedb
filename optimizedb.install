@@ -23,6 +23,7 @@ function optimizedb_uninstall() {
   variable_del('optimizedb_last_optimization');
   variable_del('optimizedb_notify_optimize');
   variable_del('optimizedb_tables_size');
+  variable_del('optimizedb_clear_type');
 }
 
 /**
@@ -79,4 +80,13 @@ function optimizedb_update_7100() {
  */
 function optimizedb_update_7101() {
   menu_rebuild();
+}
+
+/**
+ * Implements of hook_update_N().
+ */
+function optimizedb_update_7102() {
+  $clear_type = variable_get('optimize_clear_type', 0);
+  variable_set('optimizedb_clear_type', $clear_type);
+  variable_del('optimize_clear_type');
 }
