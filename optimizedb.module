@@ -84,9 +84,7 @@ function optimizedb_admin() {
   );
 
   $form['executing_commands']['info'] = array(
-    '#markup' => t('<strong>Clear cache_form table</strong> - clear the cache in a table cache_form, which has expired.' .
-      '<br>' . 
-      '<strong>Clear an entire table cache_form</strong> - deleting all the cache in a table cache_form.'),
+    '#markup' => t('<strong>Clear cache_form table</strong> - clear the cache in a table cache_form, which has expired.<br /><strong>Clear an entire table cache_form</strong> - deleting all the cache in a table cache_form.'),
     '#prefix' => '<div class="clearfix"></div>',
   );
 
