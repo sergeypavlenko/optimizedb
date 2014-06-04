@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Database Optimization
+ * Database Optimization.
  *
  * Optimizing the site database and clearing tables cache_form.
  */
@@ -346,12 +346,11 @@ function optimizedb_list_tables_optimize_tables_submit($form, &$form_state) {
  * @param string $operation_name
  *   The operation to be performed with tables.
  */
-function _optimizedb_list_tables_operation_execute($form, $form_state, $operation_name) {
+function _optimizedb_list_tables_operation_execute(array $form, array $form_state, $operation_name) {
   $tables_selected = $form_state['values']['tables'];
 
   if (db_driver() == 'mysql') {
     if (!empty($tables_selected)) {
-      $table_origin = $form['tables']['#options'];
       $count = 0;
 
       foreach ($tables_selected as $table_name => $selected) {
@@ -438,9 +437,9 @@ function _optimizedb_list_tables_sort($a, $b) {
 
 /**
  * Output how much time passed from the specified date.
- * 
+ *
  * @param int $timestamp
- *   The date in Unix format. 
+ *   The date in Unix format.
  *
  * @return string
  *   The formatted date.
@@ -459,7 +458,7 @@ function _optimizedb_date($timestamp) {
 
 /**
  * List and the size of the database tables.
- * 
+ *
  * @return array
  *   An array with a list of database tables.
  */
@@ -652,8 +651,8 @@ function optimizedb_admin_clear_table_all_submit($form, &$form_state) {
  *
  * @param mixed $type
  *   NULL - Default type, which is selected by the user.
- *   OPTIMIZEDB_CLEAR_EXPIRED_CACHE - Delete cache which expired
- *   OPTIMIZEDB_CLEAR_ENTIRE_CACHE - Delete entire cache
+ *   OPTIMIZEDB_CLEAR_EXPIRED_CACHE - Delete cache which expired.
+ *   OPTIMIZEDB_CLEAR_ENTIRE_CACHE - Delete entire cache.
  */
 function _optimizedb_clear_cache_form_table($type = NULL) {
   if (is_null($type)) {
