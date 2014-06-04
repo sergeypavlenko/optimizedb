@@ -205,8 +205,7 @@ class OptimizedbListTablesOperationExecuteTestCase extends OptimizedbTestCase {
 
     // Output all database tables.
     $tables = _optimizedb_tables_list();
-    $table = array_shift($tables);
-    $table_name = $table['name'];
+    $table_name = key($tables);
 
     $edit = array();
     // Selected first table in list.
