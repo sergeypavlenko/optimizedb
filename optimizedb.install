@@ -65,6 +65,16 @@ function optimizedb_requirements($phase) {
     }
   }
 
+  if ($phase == 'install') {
+    if (db_driver() == 'sqlite') {
+      $requirements['optimizedb'] = array(
+        'title' => $t('Database Optimization'),
+        'description' => $t('The module does not work with SQLite.'),
+        'severity' => REQUIREMENT_ERROR,
+      );
+    }
+  }
+
   return $requirements;
 }
 
