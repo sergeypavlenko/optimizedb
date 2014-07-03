@@ -11,7 +11,7 @@
  * @return array
  *   List drivers.
  */
-function optimizedb_available_drivers() {
+function optimizedb_available_db_drivers() {
   return array(
     'mysql',
     'pgsql',
@@ -79,7 +79,7 @@ function optimizedb_requirements($phase) {
   }
 
   if ($phase == 'install') {
-    $db_drivers_list = optimizedb_available_drivers();
+    $db_drivers_list = optimizedb_available_db_drivers();
     $db_driver = db_driver();
 
     if (!in_array($db_driver, $db_drivers_list)) {
