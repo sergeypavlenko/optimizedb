@@ -6,6 +6,19 @@
  */
 
 /**
+ * Database Drivers with which works module.
+ *
+ * @return array
+ *   List drivers.
+ */
+function optimizedb_available_drivers() {
+  return array(
+    'mysql',
+    'pgsql',
+  );
+}
+
+/**
  * Implements hook_enable().
  */
 function optimizedb_enable() {
@@ -66,10 +79,15 @@ function optimizedb_requirements($phase) {
   }
 
   if ($phase == 'install') {
-    if (db_driver() == 'sqlite') {
+    $db_drivers_list = optimizedb_available_drivers();
+    $db_driver = db_driver();
+
+    if (!in_array($db_driver, $db_drivers_list)) {
       $requirements['optimizedb'] = array(
         'title' => $t('Database Optimization'),
-        'description' => $t('The module does not work with SQLite.'),
+        'description' => $t('The module Optimizedb does not work with db driver "@name".', array(
+          '@name' => $db_driver,
+        )),
         'severity' => REQUIREMENT_ERROR,
       );
     }
