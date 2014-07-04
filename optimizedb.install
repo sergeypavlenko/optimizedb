@@ -6,6 +6,20 @@
  */
 
 /**
+ * Database Drivers with which works module.
+ *
+ * @return array
+ *   List drivers.
+ */
+function optimizedb_available_db_drivers() {
+  return array(
+    'mysql',
+    'mysqli',
+    'pgsql',
+  );
+}
+
+/**
  * Implements hook_enable().
  */
 function optimizedb_enable() {
@@ -29,6 +43,8 @@ function optimizedb_uninstall() {
  * Implements hook_requirements().
  */
 function optimizedb_requirements($phase) {
+  global $db_type;
+
   $requirements = array();
   // Ensure translations don't break during installation.
   $t = get_t();
@@ -60,6 +76,20 @@ function optimizedb_requirements($phase) {
         )),
         'severity' => REQUIREMENT_ERROR,
         'value' => $time_optimization,
+      );
+    }
+  }
+
+  if ($phase == 'install') {
+    $db_drivers_list = optimizedb_available_db_drivers();
+
+    if (!in_array($db_type, $db_drivers_list)) {
+      $requirements['optimizedb'] = array(
+        'title' => $t('Database Optimization'),
+        'description' => $t('The module Optimizedb does not work with db driver "@name".', array(
+          '@name' => $db_type,
+        )),
+        'severity' => REQUIREMENT_ERROR,
       );
     }
   }
