@@ -1,3 +1,9 @@
 {
-    "core" : "drupal-7"
+    "core" : "drupal-7",
+    "dependencies": {
+        "altpager": {
+            "url": "https://github.com/itpatrol/altpager"
+        }
+    },
+    "enable": "testing"
 }
