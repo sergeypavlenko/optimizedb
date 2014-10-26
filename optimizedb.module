@@ -365,7 +365,6 @@ function _optimizedb_list_tables_operation_execute($form, $form_state, $operatio
 
   if (optimizedb_db_driver() == 'mysql') {
     if (!empty($tables_selected)) {
-      $table_origin = $form['name'];
       $count = 0;
 
       foreach ($tables_selected as $table => $value) {
