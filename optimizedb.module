@@ -233,9 +233,9 @@ function optimizedb_list_tables() {
   $form['header'] = array(
     '#type' => 'value',
     '#value' => array(
-       theme('table_select_header_cell'),
-       array('data' => t('Table name')),
-       array('data' => t('Table size'), 'field' => 'size', 'sort' => 'asc'),
+      theme('table_select_header_cell'),
+      array('data' => t('Table name')),
+      array('data' => t('Table size'), 'field' => 'size', 'sort' => 'asc'),
     ),
   );
   
