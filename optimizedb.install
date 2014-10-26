@@ -28,7 +28,7 @@ function optimizedb_enable() {
 }
 
 /**
- * Implements of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function optimizedb_uninstall() {
   variable_del('optimizedb_clear_period');
