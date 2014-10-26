@@ -758,7 +758,9 @@ function optimizedb_cron() {
  * Output drivers database.
  *
  * @global string $db_type Name of the current database driver.
+ *
  * @return string
+ *   Name db driver.
  */
 function optimizedb_db_driver() {
   global $db_type;
