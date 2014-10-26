@@ -37,6 +37,7 @@ function optimizedb_uninstall() {
   variable_del('optimizedb_last_optimization');
   variable_del('optimizedb_notify_optimize');
   variable_del('optimizedb_tables_size');
+  variable_del('optimizedb_clear_type');
 }
 
 /**
