@@ -295,7 +295,7 @@ function optimizedb_list_tables() {
   }
 
   if (!empty($rows)) {
-    foreach ($rows as $key => $row) {
+    foreach ($rows as $row) {
       $options[$row['name']] = '';
       $form['name'][$row['name']] = array('#value' => $row['name']);
       $form['size'][$row['name']] = array('#value' => $row['size']);
