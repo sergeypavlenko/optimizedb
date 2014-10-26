@@ -146,7 +146,7 @@ function optimizedb_admin() {
         0 AS \"Index_length\""));
       break;
   }
-  
+
   $table_length = $table_length->Data_length + $table_length->Index_length;
 
   $form['optimizedb_auto']['lenght'] = array(
@@ -238,11 +238,11 @@ function optimizedb_list_tables() {
       array('data' => t('Table size'), 'field' => 'size', 'sort' => 'asc'),
     ),
   );
-  
+
   $rows = _optimizedb_tables_list();
 
   usort($rows, '_optimizedb_list_tables_sort');
-  
+
   $operations_tables_result = isset($_SESSION['optimizedb_list_tables_operations']) ? $_SESSION['optimizedb_list_tables_operations'] : NULL;
 
   if (!is_null($operations_tables_result)) {
@@ -268,7 +268,7 @@ function optimizedb_list_tables() {
   }
 
   $_SESSION['optimizedb_list_tables_operations'] = NULL;
-  
+
   if (optimizedb_db_driver() == 'mysql') {
     $form['operations'] = array(
       '#type' => 'fieldset',
@@ -293,7 +293,7 @@ function optimizedb_list_tables() {
       '#submit' => array('optimizedb_list_tables_optimize_tables_submit'),
     );
   }
-  
+
   if (!empty($rows)) {
     foreach ($rows as $key => $row) {
       $options[$row['name']] = '';
@@ -301,12 +301,12 @@ function optimizedb_list_tables() {
       $form['size'][$row['name']] = array('#value' => $row['size']);
     }
   }
- 
+
   $form['tables'] = array(
     '#type' => 'checkboxes',
     '#options' => isset($options) ? $options : array(),
   );
- 
+
   return $form;
 }
 
@@ -442,7 +442,7 @@ function _optimizedb_list_tables_operation_execute_finished($success, $results, 
  */
 function _optimizedb_list_tables_sort($a, $b) {
   static $sort = FALSE;
-  
+
   if (!$sort) {
     $sort = tablesort_get_sort(array());
   }
@@ -456,10 +456,10 @@ function _optimizedb_list_tables_sort($a, $b) {
 
 /**
  * Convert bytes to the usual size for people.
- * 
+ *
  * @param int $size
  *   Size in bytes.
- * 
+ *
  * @return string
  *   The correct size.
  */
@@ -485,7 +485,7 @@ function _optimizedb_format_size($size) {
 
 /**
  * Output how much time passed from the specified date.
- * 
+ *
  * @param int $timestamp
  *   The date in Unix format. 
  *
@@ -506,7 +506,7 @@ function _optimizedb_date($timestamp) {
 
 /**
  * List and the size of the database tables.
- * 
+ *
  * @return array
  *   An array with a list of database tables.
  */
@@ -525,12 +525,12 @@ function _optimizedb_tables_list() {
         ORDER BY table_name");
       break;
   }
-  
+
   $result = array();
 
   if ($tables) {
     $size_tables = 0;
-    
+
     while ($table = db_fetch_object($tables)) {
       $length = $table->Data_length + $table->Index_length;
       $result[$table->Name] = array(
