@@ -7,9 +7,7 @@
  * Optimizing the site database and clearing tables cache_form.
  */
 
-if (!defined('REQUEST_TIME')) {
-  define('REQUEST_TIME', (int) $_SERVER['REQUEST_TIME']);
-}
+define('OPTIMIZEDB_REQUEST_TIME', (int) $_SERVER['REQUEST_TIME']);
 
 /**
  * Implements hook_menu().
@@ -196,7 +194,7 @@ function optimizedb_admin() {
  * Page hide notification.
  */
 function optimizedb_hide_notification() {
-  $time = REQUEST_TIME;
+  $time = OPTIMIZEDB_REQUEST_TIME;
   $notify_optimize = variable_get('optimizedb_notify_optimize', FALSE);
 
   // There is a need to disable the notification?
@@ -495,7 +493,7 @@ function _optimizedb_date($timestamp) {
     return t('None');
   }
 
-  $difference = REQUEST_TIME - $timestamp;
+  $difference = OPTIMIZEDB_REQUEST_TIME - $timestamp;
   $text = format_interval($difference, 1);
 
   return $text;
@@ -668,7 +666,7 @@ function optimizedb_optimize_batch_finished($success, $results, $operations) {
   }
 
   variable_set('optimizedb_notify_optimize', FALSE);
-  variable_set('optimizedb_last_optimization', REQUEST_TIME);
+  variable_set('optimizedb_last_optimization', OPTIMIZEDB_REQUEST_TIME);
   cache_clear_all('optimizedb_tables_status', 'cache');
 }
 
@@ -706,20 +704,20 @@ function _optimizedb_clear_table($type = NULL) {
   else {
     $count_all = (int) db_result(db_query("SELECT COUNT(*) FROM {cache_form}"));
     if ($count_all !== 0) {
-      $count_expire = (int) db_result(db_query("SELECT COUNT(*) FROM {cache_form} WHERE expire < %d", REQUEST_TIME));
+      $count_expire = (int) db_result(db_query("SELECT COUNT(*) FROM {cache_form} WHERE expire < %d", OPTIMIZEDB_REQUEST_TIME));
 
       if ($count_all == $count_expire) {
         db_query("TRUNCATE {cache_form}");
       }
       else {
-        db_query("DELETE FROM {cache_form} WHERE expire < %d", REQUEST_TIME);
+        db_query("DELETE FROM {cache_form} WHERE expire < %d", OPTIMIZEDB_REQUEST_TIME);
       }
     }
   }
 
   // Update size tables.
   _optimizedb_tables_list();
-  variable_set('optimizedb_last_clear', REQUEST_TIME);
+  variable_set('optimizedb_last_clear', OPTIMIZEDB_REQUEST_TIME);
 }
 
 /**
@@ -731,9 +729,9 @@ function optimizedb_cron() {
   if ($clear_period !== 0) {
     $last_clear = variable_get('optimizedb_last_clear', 0);
     $time_next_clear = strtotime('+ ' . $clear_period . ' day',
-      ($last_clear == 0 ? REQUEST_TIME : $last_clear));
+      ($last_clear == 0 ? OPTIMIZEDB_REQUEST_TIME : $last_clear));
 
-    if ($clear_period == 100 || $time_next_clear <= REQUEST_TIME) {
+    if ($clear_period == 100 || $time_next_clear <= OPTIMIZEDB_REQUEST_TIME) {
       _optimizedb_clear_table();
     }
   }
@@ -743,9 +741,9 @@ function optimizedb_cron() {
   if ($optimization_period !== 0) {
     $last_optimization = variable_get('optimizedb_last_optimization', 0);
     $time_next_optimization = strtotime('+ ' . $optimization_period . ' day',
-      ($last_optimization == 0 ? REQUEST_TIME : $last_optimization));
+      ($last_optimization == 0 ? OPTIMIZEDB_REQUEST_TIME : $last_optimization));
 
-    if ($time_next_optimization <= REQUEST_TIME) {
+    if ($time_next_optimization <= OPTIMIZEDB_REQUEST_TIME) {
       variable_set('optimizedb_notify_optimize', TRUE);
     }
   }
