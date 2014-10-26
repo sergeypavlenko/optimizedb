@@ -695,8 +695,8 @@ function optimizedb_admin_clear_table_all_submit($form, &$form_state) {
  * Cleaning table cache_form and cleaning time record.
  *
  * @param int $type
- *   0 - Delete cache which expired
- *   1 - Delete entire cache
+ *   0 - Delete cache which expired.
+ *   1 - Delete entire cache.
  */
 function _optimizedb_clear_table($type = NULL) {
   if (is_null($type)) {
