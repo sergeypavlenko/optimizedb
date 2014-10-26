@@ -487,7 +487,7 @@ function _optimizedb_format_size($size) {
  * Output how much time passed from the specified date.
  *
  * @param int $timestamp
- *   The date in Unix format. 
+ *   The date in Unix format.
  *
  * @return string
  *   The formatted date.
