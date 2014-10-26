@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Database Optimization
+ * Database Optimization.
  *
  * Optimizing the site database and clearing tables cache_form.
  */
