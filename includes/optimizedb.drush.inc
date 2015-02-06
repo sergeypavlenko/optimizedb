@@ -41,6 +41,6 @@ function drush_optimizedb_optimize() {
 function drush_optimizedb_cleaning() {
   drush_bootstrap(DRUSH_BOOTSTRAP_DRUPAL_FULL);
 
-  _optimizedb_clear_table();
+  _optimizedb_clear_cache_form_table();
   drush_log(dt('The table "cache_form" is cleared.'), 'ok');
 }
