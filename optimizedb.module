@@ -64,9 +64,7 @@ function optimizedb_permission() {
 /**
  * Configuring the module.
  */
-function optimizedb_admin() {
-  $form = array();
-
+function optimizedb_admin($form, &$form_state) {
   $form['executing_commands'] = array(
     '#type' => 'fieldset',
     '#title' => t('Executing commands manually'),
