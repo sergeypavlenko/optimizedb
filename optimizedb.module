@@ -25,6 +25,7 @@ function optimizedb_menu() {
     'access arguments' => array('administer optimizedb settings'),
     'type' => MENU_NORMAL_ITEM,
   );
+
   $items['admin/config/development/optimizedb/settings'] = array(
     'title' => 'Database Optimization',
     'type' => MENU_DEFAULT_LOCAL_TASK,
