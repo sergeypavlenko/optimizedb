@@ -129,6 +129,11 @@ function optimizedb_admin($form, &$form_state) {
     ),
   );
 
+  // Default values.
+  $table_length = new stdClass();
+  $table_length->Data_length = 0;
+  $table_length->Index_length = 0;
+
   switch (db_driver()) {
     case 'mysql':
       $table_length = db_query("SHOW TABLE STATUS LIKE '{cache_form}';")->fetchObject();
