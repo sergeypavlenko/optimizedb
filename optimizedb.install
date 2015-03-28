@@ -8,8 +8,10 @@
 /**
  * Database Drivers with which works module.
  *
- * @return array
+ * @return string[]
  *   List drivers.
+ *
+ * @see optimizedb_requirements()
  */
 function optimizedb_available_db_drivers() {
   return array(
@@ -20,6 +22,8 @@ function optimizedb_available_db_drivers() {
 
 /**
  * Implements hook_enable().
+ *
+ * @see _optimizedb_tables_list()
  */
 function optimizedb_enable() {
   // Update information on the size of tables.
@@ -97,21 +101,21 @@ function optimizedb_requirements($phase) {
 }
 
 /**
- * Implements hook_update_N().
+ * Clear the cache for cache_id "optimizedb_tables_status".
  */
 function optimizedb_update_7100() {
   cache_clear_all('optimizedb_tables_status');
 }
 
 /**
- * Implements hook_update_N().
+ * Rebuild menu, a new menu item.
  */
 function optimizedb_update_7101() {
   menu_rebuild();
 }
 
 /**
- * Implements hook_update_N().
+ * Changing the name of a variable.
  */
 function optimizedb_update_7102() {
   $clear_type = variable_get('optimize_clear_type', 0);
