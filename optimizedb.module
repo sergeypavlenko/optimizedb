@@ -13,6 +13,9 @@ define('OPTIMIZEDB_CLEAR_EXPIRED_CACHE', 0);
 // Delete entire cache in table "cache_form".
 define('OPTIMIZEDB_CLEAR_ENTIRE_CACHE', 1);
 
+// Step for time clear period.
+define('OPTIMIZEDB_CLEAR_PERIOD_STEP', 6);
+
 /**
  * Implements hook_menu().
  */
@@ -133,6 +136,24 @@ function optimizedb_admin($form, &$form_state) {
       30 => t('30 days'),
       60 => t('60 days'),
     ),
+  );
+
+  $time_array = array(
+    t('Disabled'),
+  );
+
+  foreach (range(0, 23, OPTIMIZEDB_CLEAR_PERIOD_STEP) as $time) {
+    $time_finish = $time + OPTIMIZEDB_CLEAR_PERIOD_STEP;
+    $time_format = number_format($time, 2, ':', '') . ' - ' . number_format($time_finish, 2, ':', '');
+    $time_array[$time_finish] = $time_format;
+  }
+
+  $form['optimizedb_auto']['optimizedb_clear_period_time'] = array(
+    '#type' => 'select',
+    '#title' => t('The period of time when you need to clean'),
+    '#default_value' => variable_get('optimizedb_clear_period_time', 0),
+    '#options' => $time_array,
+    '#description' => t('<b>Warning!</b> If Cron will not be executed in the selected time period, the cleaning is not going to happen.'),
   );
 
   // Default values.
@@ -771,7 +792,19 @@ function optimizedb_cron() {
       ($last_clear == 0 ? REQUEST_TIME : $last_clear));
 
     if ($clear_period == 100 || $time_next_clear <= REQUEST_TIME) {
-      _optimizedb_clear_cache_form_table();
+      $clear_cache_execute = TRUE;
+
+      // Performing cleaning table only in a given period of time.
+      if ($period_time = variable_get('optimizedb_clear_period_time', 0)) {
+        $period_time_start = $period_time - OPTIMIZEDB_CLEAR_PERIOD_STEP;
+        $current_hour = (int) date('H');
+
+        $clear_cache_execute = ($current_hour >= $period_time_start && $current_hour <= $period_time);
+      }
+
+      if ($clear_cache_execute) {
+        _optimizedb_clear_cache_form_table();
+      }
     }
   }
 
