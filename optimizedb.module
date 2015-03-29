@@ -153,7 +153,7 @@ function optimizedb_admin($form, &$form_state) {
 
   $table_length = $table_length->Data_length + $table_length->Index_length;
 
-  $form['optimizedb_auto']['lenght'] = array(
+  $form['optimizedb_auto']['length'] = array(
     '#markup' => t('The current size of the table <strong>@length</strong>.', array(
       '@length' => format_size($table_length),
     )),
