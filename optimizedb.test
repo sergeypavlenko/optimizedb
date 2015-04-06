@@ -41,7 +41,7 @@ class OptimizedbFunctionsTestCase extends OptimizedbTestCase {
   /**
    * Sizes tables.
    */
-  public function testOptimizedbTablesList() {
+  public function testTablesList() {
     variable_set('optimizedb_tables_size', 0);
 
     // Function for output all database tables and update their total size.
@@ -53,7 +53,7 @@ class OptimizedbFunctionsTestCase extends OptimizedbTestCase {
   /**
    * Test _optimizedb_clear_cache_form_table() function.
    */
-  public function testOptimizedbClearTable() {
+  public function testClearTable() {
     $this->assertEqual($this->countCacheFormRows(), 0);
 
     $time = REQUEST_TIME;
@@ -100,7 +100,7 @@ class OptimizedbFunctionsTestCase extends OptimizedbTestCase {
   /**
    * Test clear cache_form table in optimizedb_cron() function.
    */
-  public function testOptimizedbCronClearTable() {
+  public function testCronClearTable() {
     variable_set('optimizedb_clear_period', 100);
 
     $this->createCacheFormItem();
@@ -113,7 +113,7 @@ class OptimizedbFunctionsTestCase extends OptimizedbTestCase {
    * Testing, when not set period of time clean-up table "cache_form"
    * using Cron.
    */
-  public function testOptimizedbCronClearTablePeriodTimeEmpty() {
+  public function testCronClearTablePeriodTimeEmpty() {
     variable_set('optimizedb_clear_period_time', 0);
     variable_set('optimizedb_clear_period', 100);
 
@@ -126,7 +126,7 @@ class OptimizedbFunctionsTestCase extends OptimizedbTestCase {
   /**
    * Testing, when set period of time clean-up table "cache_form" using Cron.
    */
-  public function testOptimizedbCronClearTablePeriodTime() {
+  public function testCronClearTablePeriodTime() {
     variable_set('optimizedb_clear_period', 100);
 
     $current_hour = (int) date('H');
@@ -148,7 +148,7 @@ class OptimizedbFunctionsTestCase extends OptimizedbTestCase {
   /**
    * Test notify optimize in optimizedb_cron() function.
    */
-  public function testOptimizedbCronNotifyOptimize() {
+  public function testCronNotifyOptimize() {
     variable_set('optimizedb_optimization_period', 1);
     variable_set('optimizedb_last_optimization', REQUEST_TIME - ((3600 * 24) * 2));
     variable_set('optimizedb_notify_optimize', FALSE);
@@ -207,7 +207,7 @@ class OptimizedbHideNotificationTestCase extends OptimizedbTestCase {
   /**
    * Display notification of the need to perform optimization.
    */
-  public function testOptimizedbHideNotification() {
+  public function testHideNotification() {
     variable_set('optimizedb_notify_optimize', FALSE);
 
     $this->drupalGet('admin/config/development/optimizedb/hide');
@@ -241,7 +241,7 @@ class OptimizedbListTablesOperationExecuteTestCase extends OptimizedbTestCase {
   /**
    * Performing operations on tables.
    */
-  public function testOptimizedbListTablesOperationExecute() {
+  public function testListTablesOperationExecute() {
     $this->drupalPost('admin/config/development/optimizedb/list_tables', array(), t('Check tables'));
     $this->assertText(t('To execute, you must select at least one table from the list.'));
 
