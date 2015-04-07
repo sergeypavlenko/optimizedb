@@ -51,6 +51,33 @@ class OptimizedbFunctionsTestCase extends OptimizedbTestCase {
   }
 
   /**
+   * Testing module admin page buttons.
+   */
+  public function testButtonsExecutingCommands() {
+    for ($i = 1; $i <= 10; $i++) {
+      $this->createCacheFormItem($i);
+    }
+
+    for ($i = 1; $i <= 5; $i++) {
+      $this->createCacheFormItem($i + 10, REQUEST_TIME + 3600);
+    }
+
+    $this->assertEqual($this->countCacheFormRows(), 15);
+
+    $this->drupalPost('admin/config/development/optimizedb', array(), t('Clear cache_form table'));
+    $this->assertEqual($this->countCacheFormRows(), 5);
+
+    $this->drupalPost('admin/config/development/optimizedb', array(), t('Clear an entire table cache_form'));
+    $this->assertEqual($this->countCacheFormRows(), 0);
+
+    $list_tables = _optimizedb_tables_list();
+    $count_tables = count($list_tables);
+
+    $this->drupalPost('admin/config/development/optimizedb', array(), t('Optimize tables'));
+    $this->assertText(t('Optimized @count tables.', array('@count' => $count_tables)));
+  }
+
+  /**
    * Test _optimizedb_clear_cache_form_table() function.
    */
   public function testClearTable() {
