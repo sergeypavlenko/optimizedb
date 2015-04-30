@@ -1,0 +1,15 @@
+optimizedb.admin_page:
+  path: '/admin/config/development/optimizedb'
+  defaults:
+    _form: '\Drupal\optimizedb\Form\OptimizedbAdminForm'
+    _title: 'Database Optimization'
+  requirements:
+    _permission: 'administer optimizedb settings'
+
+optimizedb.list_tables:
+  path: '/admin/config/development/optimizedb/list_tables'
+  defaults:
+    _form: '\Drupal\optimizedb\Form\OptimizedbListTablesForm'
+    _title: 'List of tables in the database'
+  requirements:
+    _permission: 'administer optimizedb settings'
