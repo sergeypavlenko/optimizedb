@@ -7,6 +7,8 @@
  * Optimizing the site database and clearing tables cache_form.
  */
 
+use Drupal\Core\Url;
+
 // Delete cache in table "cache_form" which expired.
 define('OPTIMIZEDB_CLEAR_EXPIRED_CACHE', 0);
 
@@ -19,6 +21,7 @@ define('OPTIMIZEDB_CLEAR_PERIOD_STEP', 6);
 /**
  * Implements hook_menu().
  */
+/*
 function optimizedb_menu() {
   $items['admin/config/development/optimizedb'] = array(
     'title' => 'Database Optimization',
@@ -51,11 +54,12 @@ function optimizedb_menu() {
 
   return $items;
 }
+*/
 
 /**
  * Implements hook_permission().
  */
-function optimizedb_permission() {
+/*function optimizedb_permission() {
   return array(
     'administer optimizedb settings' => array(
       'title' => t('Database Optimization'),
@@ -63,6 +67,7 @@ function optimizedb_permission() {
     ),
   );
 }
+*/
 
 /**
  * Configuring the module.
@@ -505,7 +510,7 @@ function _optimizedb_date($timestamp) {
   }
 
   $difference = REQUEST_TIME - $timestamp;
-  $text = format_interval($difference, 1);
+  $text = \Drupal::service('date.formatter')->formatInterval($difference, 1);
 
   return $text;
 }
@@ -521,9 +526,7 @@ function _optimizedb_tables_list() {
 
   switch (db_driver()) {
     case 'mysql':
-      $tables = db_query("SHOW TABLE STATUS", array(), array(
-        'fetch' => PDO::FETCH_OBJ,
-      ));
+      $tables = db_query("SHOW TABLE STATUS")->fetchAll();
       break;
 
     case 'pgsql':
@@ -532,7 +535,7 @@ function _optimizedb_tables_list() {
         0 as \"Index_length\"
         FROM information_schema.tables
         WHERE table_schema = 'public'
-        ORDER BY table_name", array(), array('fetch' => PDO::FETCH_OBJ));
+        ORDER BY table_name")->fetchAll();
       break;
   }
 
@@ -554,7 +557,9 @@ function _optimizedb_tables_list() {
     }
 
     // The total size of the tables.
-    variable_set('optimizedb_tables_size', $size_tables);
+    \Drupal::configFactory()->getEditable('optimizedb.settings')
+      ->set('tables_size', $size_tables)
+      ->save();
   }
 
   return (array) $result;
@@ -595,12 +600,6 @@ function optimizedb_admin_optimize_table_submit($form, &$form_state) {
   );
 
   batch_set($batch);
-
-  // Calling this function, you need to run the optimization from
-  // the command line.
-  if (PHP_SAPI == 'cli') {
-    drush_backend_batch_process();
-  }
 }
 
 /**
@@ -638,12 +637,6 @@ function optimizedb_optimize_batch_run($table, &$context) {
       break;
   }
 
-  if (PHP_SAPI == 'cli') {
-    drush_print(dt('Table "@name" been optimized.', array(
-      '@name' => $table,
-    )));
-  }
-
   $context['results'][$status][] = $table;
 }
 
@@ -668,45 +661,25 @@ function optimizedb_optimize_batch_finished($success, $results, $operations) {
       $message_error = 'When optimizing experiencing errors with tables:
         @tables. You need as quickly as possible <a href="@url">to check the table</a>. Other tables
         were successfully optimized.';
-      if (PHP_SAPI == 'cli') {
-        drush_log(dt($message_error, array(
-          '@tables' => implode(', ', $results['error']),
-          '@url' => url('admin/config/development/optimizedb/list_tables'),
-        )), 'error');
-      }
-      else {
-        drupal_set_message(t($message_error, array(
-          '@tables' => implode(', ', $results['error']),
-          '@url' => url('admin/config/development/optimizedb/list_tables'),
-        )), 'error');
-      }
+      drupal_set_message(t($message_error, array(
+        '@tables' => implode(', ', $results['error']),
+        '@url' => new Url('optimizedb.list_tables'),
+      )), 'error');
     }
     else {
-      $message_success = 'Optimized @count tables.';
-      if (PHP_SAPI == 'cli') {
-        drush_log(dt($message_success, array(
-          '@count' => count($results['success']),
-        )), 'success');
-      }
-      else {
-        drupal_set_message(t($message_success, array(
-          '@count' => count($results['success']),
-        )));
-      }
+      drupal_set_message(t('Optimized @count tables.', array(
+        '@count' => count($results['success']),
+      )));
     }
   }
   else {
-    $message_error = 'Completed with errors.';
-    if (PHP_SAPI == 'cli') {
-      drush_log(dt($message_error), 'error');
-    }
-    else {
-      drupal_set_message(t($message_error), 'error');
-    }
+    drupal_set_message(t('Completed with errors.'), 'error');
   }
 
-  variable_set('optimizedb_notify_optimize', FALSE);
-  variable_set('optimizedb_last_optimization', REQUEST_TIME);
+  \Drupal::configFactory()->getEditable('optimizedb.settings')
+    ->set('notify_optimize', FALSE)
+    ->set('last_optimization', REQUEST_TIME)
+    ->save();
 }
 
 /**
