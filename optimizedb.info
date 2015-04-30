@@ -1,6 +1,0 @@
-name = Database Optimization
-description = Optimizing the site database and clearing tables cache_form.
-core = 7.x
-package = Development
-files[] = optimizedb.test
-configure = admin/config/development/optimizedb
