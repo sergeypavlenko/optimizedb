@@ -29,6 +29,9 @@ class OptimizedbAdminForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('optimizedb.settings');
 
+    // Messages status execute operation.
+    optimizedb_operation_messages($form);
+
     $form['executing_commands'] = array(
       '#type' => 'fieldset',
       '#title' => $this->t('Executing commands manually'),
@@ -37,7 +40,7 @@ class OptimizedbAdminForm extends ConfigFormBase {
     $form['executing_commands']['optimize'] = array(
       '#type' => 'submit',
       '#value' => $this->t('Optimize tables'),
-      '#submit' => array('optimizedb_admin_optimize_table_submit'),
+      '#submit' => [[$this, 'optimizeTablesSubmit']],
     );
 
     $form['optimize_table'] = array(
@@ -102,6 +105,19 @@ class OptimizedbAdminForm extends ConfigFormBase {
       ->save();
 
     parent::submitForm($form, $form_state);
+  }
+
+  /**
+   * Optimize all tables in database.
+   */
+  public function optimizeTablesSubmit(array &$form, FormStateInterface $form_state) {
+    // Get all tables list.
+    $tables = _optimizedb_tables_list();
+
+    // Value is key.
+    array_walk($tables, function(&$value) { $value = $value['name']; });
+
+    _optimizedb_list_tables_operation_execute($tables, 'OPTIMIZE TABLE');
   }
 
 }
