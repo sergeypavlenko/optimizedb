@@ -39,7 +39,20 @@ class OptimizedbListTablesForm extends FormBase {
 
     $tables = _optimizedb_tables_list();
 
+    $sort = tablesort_get_sort($headers);
+
+    usort($tables, function($a, $b) use ($sort) {
+      if ($sort == 'asc') {
+        return $a['size_byte'] > $b['size_byte'];
+      }
+
+      return $a['size_byte'] < $b['size_byte'];
+    });
+
     $rows = array();
+
+    // Messages status execute operation.
+    optimizedb_operation_messages($form);
 
     foreach ($tables as $table) {
       // Parameter "size_byte" us only needed to sort, now his unit to remove.
@@ -51,25 +64,22 @@ class OptimizedbListTablesForm extends FormBase {
     if (db_driver() == 'mysql') {
       $form['operations'] = array(
         '#type' => 'fieldset',
-        '#title' => t('Operations with tables:'),
+        '#title' => $this->t('Operations with tables:'),
       );
 
       $form['operations']['check_tables'] = array(
         '#type' => 'submit',
-        '#value' => t('Check tables'),
-        '#submit' => array('optimizedb_list_tables_check_tables_submit'),
+        '#value' => $this->t('Check tables'),
       );
 
       $form['operations']['repair_tables'] = array(
         '#type' => 'submit',
-        '#value' => t('Repair tables'),
-        '#submit' => array('optimizedb_list_tables_repair_tables_submit'),
+        '#value' => $this->t('Repair tables'),
       );
 
       $form['operations']['optimize_tables'] = array(
         '#type' => 'submit',
-        '#value' => t('Optimize tables'),
-        '#submit' => array('optimizedb_list_tables_optimize_tables_submit'),
+        '#value' => $this->t('Optimize tables'),
       );
     }
 
@@ -87,6 +97,27 @@ class OptimizedbListTablesForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $tables = $form_state->getValue('tables');
+    $operation = '';
 
+    switch ($form_state->getValue('op')) {
+      // Checking the selected tables to find errors.
+      case $this->t('Check tables'):
+        $operation = 'CHECK TABLE';
+        break;
+
+      // Repair selected tables.
+      case $this->t('Repair tables'):
+        $operation = 'REPAIR TABLE';
+        break;
+
+      // Optimization of the selected tables.
+      case $this->t('Optimize tables'):
+        $operation = 'OPTIMIZE TABLE';
+        break;
+    }
+
+    _optimizedb_list_tables_operation_execute($tables, $operation);
   }
+
 }
