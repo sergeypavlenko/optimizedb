@@ -12,7 +12,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
 /**
- * Displays banned IP addresses.
+ * Settings optimizedb module.
  */
 class OptimizedbAdminForm extends ConfigFormBase {
 

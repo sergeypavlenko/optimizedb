@@ -11,7 +11,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Displays banned IP addresses.
+ * Operations with tables.
  */
 class OptimizedbListTablesForm extends FormBase {
 
