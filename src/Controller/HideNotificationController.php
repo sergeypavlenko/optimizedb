@@ -22,7 +22,7 @@ class HideNotificationController extends ControllerBase {
    */
   public function hide() {
     $time = REQUEST_TIME;
-    $config = $this->config('optimizedb.settings');
+    $config = \Drupal::configFactory()->getEditable('optimizedb.settings');
 
     $notify_optimize = $config->get('optimizedb_notify_optimize');
 
