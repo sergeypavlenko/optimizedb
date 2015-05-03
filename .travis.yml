@@ -38,7 +38,7 @@ before_script:
   # reference and enable travis_ci_drupal_module_example in build site
   - ln -s $(readlink -e $(cd -)) travis_ci_optimizedb_test/drupal/sites/all/modules/optimizedb
   - cd travis_ci_optimizedb_test/drupal
-  #- drush --yes pm-enable optimizedb
+  - drush --yes en optimizedb
 
   # start a web server on port 8080, run in the background; wait for initialization
   - drush runserver 127.0.0.1:8080 &
