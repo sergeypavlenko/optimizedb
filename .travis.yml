@@ -1,9 +1,9 @@
 language: php
 
 php:
-  - 5.3
   - 5.4
   - 5.5
+  - 5.6
 
 mysql:
   database: travis_ci_optimizedb_test
@@ -38,6 +38,7 @@ before_script:
   # reference and enable travis_ci_drupal_module_example in build site
   - ln -s $(readlink -e $(cd -)) travis_ci_optimizedb_test/drupal/modules/optimizedb
   - cd travis_ci_optimizedb_test/drupal
+  - drush st
   - drush --yes en optimizedb
 
   # start a web server on port 8080, run in the background; wait for initialization
