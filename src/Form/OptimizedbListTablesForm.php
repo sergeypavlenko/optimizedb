@@ -61,7 +61,7 @@ class OptimizedbListTablesForm extends FormBase {
       $rows[$table['name']] = $table;
     }
 
-    if (db_driver() == 'mysql') {
+    if (\Drupal::database()->driver() == 'mysql') {
       $form['operations'] = array(
         '#type' => 'fieldset',
         '#title' => $this->t('Operations with tables:'),
@@ -100,7 +100,9 @@ class OptimizedbListTablesForm extends FormBase {
     $tables = $form_state->getValue('tables');
     $operation = '';
 
-    switch ($form_state->getValue('op')) {
+    $op = (string) $form_state->getValue('op');
+
+    switch ($op) {
       // Checking the selected tables to find errors.
       case $this->t('Check tables'):
         $operation = 'CHECK TABLE';
