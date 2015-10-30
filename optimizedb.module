@@ -51,10 +51,11 @@ function optimizedb_operation_messages(array &$form) {
  * @param string $operation_name
  *   The operation to be performed with tables.
  *
+ * @see \Drupal\optimizedb\Form\OptimizedbListTablesForm::submitForm()
  * @see _optimizedb_list_tables_operation_execute_run()
  */
 function _optimizedb_list_tables_operation_execute($tables, $operation_name) {
-  if (db_driver() == 'mysql') {
+  if (\Drupal::database()->driver() == 'mysql') {
     if (!empty($tables)) {
       $operations = array();
 
@@ -97,7 +98,7 @@ function _optimizedb_list_tables_operation_execute($tables, $operation_name) {
  *   Reference to an array used for Batch API storage.
  */
 function _optimizedb_list_tables_operation_execute_run($param, &$context) {
-  $operation_result = db_query($param['operation'] . ' ' . $param['name'])->fetchAll();
+  $operation_result = \Drupal::database()->query($param['operation'] . ' ' . $param['name'])->fetchAll();
 
   foreach ($operation_result as $result) {
     if (isset($result->Msg_type) && in_array(strtolower($result->Msg_type), array('error', 'warning'))) {
@@ -172,13 +173,13 @@ function _optimizedb_date($timestamp) {
 function _optimizedb_tables_list() {
   $tables = FALSE;
 
-  switch (db_driver()) {
+  switch (\Drupal::database()->driver()) {
     case 'mysql':
-      $tables = db_query("SHOW TABLE STATUS")->fetchAll();
+      $tables = \Drupal::database()->query("SHOW TABLE STATUS")->fetchAll();
       break;
 
     case 'pgsql':
-      $tables = db_query("SELECT table_name as \"Name\",
+      $tables = \Drupal::database()->query("SELECT table_name as \"Name\",
         pg_total_relation_size(table_name) AS \"Data_length\",
         0 as \"Index_length\"
         FROM information_schema.tables

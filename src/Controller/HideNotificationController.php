@@ -38,7 +38,7 @@ class HideNotificationController extends ControllerBase {
       $time_next_optimization = strtotime('+ ' . $optimization_period . ' day', $time);
 
       $output = $this->t('The following message on the need to perform optimization, you get - @date.', array(
-        '@date' => format_date($time_next_optimization),
+        '@date' => \Drupal::service('date.formatter')->format($time_next_optimization),
       ));
     }
     else {

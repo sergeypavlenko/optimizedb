@@ -71,7 +71,7 @@ function optimizedb_requirements($phase) {
 
   if ($phase == 'install') {
     $db_drivers_list = optimizedb_available_db_drivers();
-    $db_driver = db_driver();
+    $db_driver = \Drupal::database()->driver();
 
     if (!in_array($db_driver, $db_drivers_list)) {
       $requirements['optimizedb'] = array(
