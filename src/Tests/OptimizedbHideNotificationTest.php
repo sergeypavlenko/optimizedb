@@ -26,20 +26,20 @@ class OptimizedbHideNotificationTest extends WebTestBase {
    *
    * @var array.
    */
-  public static $modules = array('optimizedb');
+  public static $modules = ['optimizedb'];
 
   /**
    * A user with permission the settings module.
    *
-   * @var object
+   * @var \Drupal\user\UserInterface
    */
-  protected $web_user;
+  protected $adminUser;
 
   public function setUp() {
     parent::setUp();
 
-    $this->web_user = $this->drupalCreateUser(array('administer optimizedb settings'));
-    $this->drupalLogin($this->web_user);
+    $this->adminUser = $this->drupalCreateUser(['administer optimizedb settings']);
+    $this->drupalLogin($this->adminUser);
   }
 
   /**

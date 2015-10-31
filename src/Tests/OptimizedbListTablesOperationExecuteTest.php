@@ -28,34 +28,34 @@ class OptimizedbListTablesOperationExecuteTest extends WebTestBase {
    *
    * @var array.
    */
-  public static $modules = array('optimizedb');
+  public static $modules = ['optimizedb'];
 
   /**
    * A user with permission the settings module.
    *
-   * @var object
+   * @var \Drupal\user\UserInterface
    */
-  protected $web_user;
+  protected $adminUser;
 
   public function setUp() {
     parent::setUp();
 
-    $this->web_user = $this->drupalCreateUser(array('administer optimizedb settings'));
-    $this->drupalLogin($this->web_user);
+    $this->adminUser = $this->drupalCreateUser(['administer optimizedb settings']);
+    $this->drupalLogin($this->adminUser);
   }
 
   /**
    * Performing operations on tables.
    */
   public function testListTablesOperationExecute() {
-    $this->drupalPostForm('admin/config/development/optimizedb/list_tables', array(), t('Check tables'));
+    $this->drupalPostForm('admin/config/development/optimizedb/list_tables', [], t('Check tables'));
     $this->assertText(t('To execute, you must select at least one table from the list.'));
 
     // Output all database tables.
     $tables = _optimizedb_tables_list();
     $table_name = key($tables);
 
-    $edit = array();
+    $edit = [];
     // Selected first table in list.
     $edit['tables[' . $table_name . ']'] = $table_name;
 

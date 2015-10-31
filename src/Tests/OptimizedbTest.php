@@ -26,20 +26,20 @@ class OptimizedbTest extends WebTestBase {
    *
    * @var array.
    */
-  public static $modules = array('optimizedb');
+  public static $modules = ['optimizedb', 'locale'];
 
   /**
    * A user with permission the settings module.
    *
-   * @var object
+   * @var \Drupal\user\UserInterface
    */
-  protected $web_user;
+  protected $adminUser;
 
   public function setUp() {
     parent::setUp();
 
-    $this->web_user = $this->drupalCreateUser(array('administer optimizedb settings'));
-    $this->drupalLogin($this->web_user);
+    $this->adminUser = $this->drupalCreateUser(['administer optimizedb settings']);
+    $this->drupalLogin($this->adminUser);
   }
 
   /**
@@ -60,7 +60,7 @@ class OptimizedbTest extends WebTestBase {
    * Testing module admin page buttons.
    */
   public function testButtonsExecutingCommands() {
-    $this->drupalPostForm('admin/config/development/optimizedb', array(), t('Optimize tables'));
+    $this->drupalPostForm('admin/config/development/optimizedb', [], t('Optimize tables'));
     $this->assertText(t('The operation completed successfully.'));
   }
 
@@ -77,7 +77,7 @@ class OptimizedbTest extends WebTestBase {
       ->save();
 
     $this->cronRun();
-    $this->assertTrue($this->config('optimizedb.settings')->get('optimizedb_notify_optimize', FALSE));
+    $this->assertTrue($this->config('optimizedb.settings')->get('optimizedb_notify_optimize'));
   }
 
 }
