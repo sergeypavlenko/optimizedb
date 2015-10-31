@@ -41,9 +41,6 @@ before_script:
   - ln -s $(readlink -e $(cd -)) travis_ci_optimizedb_test/drupal-8/modules/optimizedb
   - cd travis_ci_optimizedb_test/drupal-8
 
-  # Import config for our pseudo install
-  - drush --verbose config-import active --yes
-
   - drush st
   - drush --yes en optimizedb
 
