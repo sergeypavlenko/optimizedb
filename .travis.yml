@@ -12,6 +12,7 @@ mysql:
 
 before_install:
   - sudo apt-get update > /dev/null
+  - composer self-update
 
 install:
   # install php packages required for running a web server from drush on php 5.3
@@ -21,8 +22,9 @@ install:
   # see: https://github.com/drush-ops/drush#install---composer
   - export PATH="$HOME/.composer/vendor/bin:$PATH"
 
-  # install drush globally
-  - composer global require drush/drush:8.0.0-rc2
+  # Install Drush
+  - composer global require drush/drush:dev-master
+  - phpenv rehash
 
 before_script:
   - git clone git://github.com/youngj/httpserver.git
@@ -33,16 +35,19 @@ before_script:
 
   # create new site, stubbing sendmail path with true to prevent delivery errors and manually resolving drush path
   - mysql -e 'create database travis_ci_optimizedb_test'
-  - php ~/.composer/vendor/drush/drush/drush.php --yes core-quick-drupal --core=drupal-8 --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/travis_ci_optimizedb_test --enable=simpletest travis_ci_optimizedb_test
+  - drush --yes core-quick-drupal --core=drupal-8 --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/travis_ci_optimizedb_test --enable=simpletest travis_ci_optimizedb_test
+
+  # Import config for our pseudo install
+  - drush --verbose config-import active --yes
 
   # reference and enable travis_ci_drupal_module_example in build site
   - ln -s $(readlink -e $(cd -)) travis_ci_optimizedb_test/drupal-8/modules/optimizedb
   - cd travis_ci_optimizedb_test/drupal-8
-  - php ~/.composer/vendor/drush/drush/drush.php st
-  - php ~/.composer/vendor/drush/drush/drush.php --yes en optimizedb
+  - drush st
+  - drush --yes en optimizedb
 
   # start a web server on port 8080, run in the background; wait for initialization
-  - php ~/.composer/vendor/drush/drush/drush.php runserver 127.0.0.1:8080 &
+  - drush runserver 127.0.0.1:8080 &
   - until netstat -an 2>/dev/null | grep '8080.*LISTEN'; do true; done
 
-script: php ~/.composer/vendor/drush/drush/drush.php test-run optimizedb --uri=http://127.0.0.1:8080
+script: drush test-run optimizedb --uri=http://127.0.0.1:8080
