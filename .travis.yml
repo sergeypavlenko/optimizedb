@@ -37,12 +37,13 @@ before_script:
   - mysql -e 'create database travis_ci_optimizedb_test'
   - drush --yes core-quick-drupal --core=drupal-8 --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/travis_ci_optimizedb_test --enable=simpletest travis_ci_optimizedb_test
 
-  # Import config for our pseudo install
-  - drush --verbose config-import active --yes
-
   # reference and enable travis_ci_drupal_module_example in build site
   - ln -s $(readlink -e $(cd -)) travis_ci_optimizedb_test/drupal-8/modules/optimizedb
   - cd travis_ci_optimizedb_test/drupal-8
+
+  # Import config for our pseudo install
+  - drush --verbose config-import active --yes
+
   - drush st
   - drush --yes en optimizedb
 
