@@ -1,9 +1,9 @@
 language: php
 
 php:
-  - 5.3
   - 5.4
   - 5.5
+  - 5.6
 
 mysql:
   database: travis_ci_optimizedb_test
@@ -22,7 +22,7 @@ install:
   - export PATH="$HOME/.composer/vendor/bin:$PATH"
 
   # install drush globally
-  - composer global require drush/drush:7.*
+  - composer global require drush/drush:7.0.0-rc1
 
 before_script:
   - git clone git://github.com/youngj/httpserver.git
@@ -33,12 +33,13 @@ before_script:
 
   # create new site, stubbing sendmail path with true to prevent delivery errors and manually resolving drush path
   - mysql -e 'create database travis_ci_optimizedb_test'
-  - php -d sendmail_path=`which true` ~/.composer/vendor/bin/drush.php --yes core-quick-drupal --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/travis_ci_optimizedb_test --enable=simpletest travis_ci_optimizedb_test
+  - php -d sendmail_path=`which true` ~/.composer/vendor/bin/drush.php --yes core-quick-drupal --core=drupal-8 --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/travis_ci_optimizedb_test --enable=simpletest travis_ci_optimizedb_test
 
   # reference and enable travis_ci_drupal_module_example in build site
-  - ln -s $(readlink -e $(cd -)) travis_ci_optimizedb_test/drupal/sites/all/modules/optimizedb
-  - cd travis_ci_optimizedb_test/drupal
-  - drush --yes pm-enable optimizedb
+  - ln -s $(readlink -e $(cd -)) travis_ci_optimizedb_test/drupal-8/modules/optimizedb
+  - cd travis_ci_optimizedb_test/drupal-8
+  - drush st
+  - drush --yes en optimizedb
 
   # start a web server on port 8080, run in the background; wait for initialization
   - drush runserver 127.0.0.1:8080 &
