@@ -65,6 +65,40 @@ function optimizedb_permission() {
 }
 
 /**
+ * Database Drivers with which works module.
+ *
+ * @return array
+ *   List drivers.
+ */
+function optimizedb_available_db_drivers() {
+  return array(
+    'mysql',
+    'pgsql',
+  );
+}
+
+/**
+ * Check the module can work with the database driver.
+ *
+ * @return string|false
+ */
+function optimizedb_check_works() {
+  // Ensure translations don't break during installation.
+  $t = get_t();
+
+  $list_drivers = optimizedb_available_db_drivers();
+  $db_driver = db_driver();
+
+  if (!in_array($db_driver, $list_drivers)) {
+    return $t('The module Optimizedb does not work with db driver "@name".', array(
+      '@name' => $db_driver,
+    ));
+  }
+
+  return FALSE;
+}
+
+/**
  * Configuring the module.
  *
  * @see optimizedb_admin_clear_table_submit()
@@ -74,6 +108,14 @@ function optimizedb_permission() {
  * @ingroup forms
  */
 function optimizedb_admin($form, &$form_state) {
+  if ($message = optimizedb_check_works()) {
+    $form['error'] = array(
+      '#markup' => $message,
+    );
+
+    return $form;
+  }
+
   $form['executing_commands'] = array(
     '#type' => 'fieldset',
     '#title' => t('Executing commands manually'),
@@ -223,6 +265,10 @@ function optimizedb_admin($form, &$form_state) {
  * Page hide notification.
  */
 function optimizedb_hide_notification() {
+  if ($message = optimizedb_check_works()) {
+    return $message;
+  }
+
   $time = REQUEST_TIME;
   $notify_optimize = variable_get('optimizedb_notify_optimize', FALSE);
 
@@ -256,6 +302,14 @@ function optimizedb_hide_notification() {
  * @ingroup forms
  */
 function optimizedb_list_tables($form, &$form_state) {
+  if ($message = optimizedb_check_works()) {
+    $form['error'] = array(
+      '#markup' => $message,
+    );
+
+    return $form;
+  }
+
   $headers = array(
     'name' => array(
       'data' => t('Table name'),
