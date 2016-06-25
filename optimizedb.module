@@ -159,6 +159,29 @@ function optimizedb_admin($form, &$form_state) {
     '#default_value' => variable_get('optimizedb_clear_type', 0),
   );
 
+  $form['optimizedb_auto']['optimizedb_clear_limit'] = array(
+    '#type' => 'select',
+    '#title' => t('Remove for one time'),
+    '#description' => t('The number of deleted records from cache_form table at a time.'),
+    '#default_value' => variable_get('optimizedb_clear_limit', 0),
+    '#options' => array(
+      0 => t('Without limits'),
+      1000 => 1000,
+      5000 => 5000,
+      10000 => 10000,
+      50000 => 50000,
+      100000 => 100000,
+      500000 => 500000,
+    ),
+    '#states' => array(
+      'visible' => array(
+        'select[name="optimizedb_clear_type"]' => array(
+          'value' => '0',
+        ),
+      ),
+    ),
+  );
+
   $last_clear = variable_get('optimizedb_last_clear', 0);
 
   $form['optimizedb_auto']['optimizedb_clear_period'] = array(
@@ -812,13 +835,32 @@ function _optimizedb_clear_cache_form_table($type = NULL) {
         ->execute()
         ->fetchField();
 
-      if ($count_all == $count_expire) {
+      $limit = (int) variable_get('optimizedb_clear_limit', 0);
+      $limit_status = $limit == 0 ? TRUE : ($count_all <= $limit);
+
+      if ($count_all == $count_expire && $limit_status) {
         db_truncate('cache_form')->execute();
       }
       else {
-        db_delete('cache_form')
-          ->condition('expire', REQUEST_TIME, '<')
-          ->execute();
+        if ($limit > 0) {
+          $query = db_select('cache_form', 'cf');
+          $query->fields('cf', array('cid'));
+          $query->condition('cf.expire', REQUEST_TIME, '<');
+          $query->orderBy('cf.expire', 'ASC');
+          $query->range(0, $limit);
+          $ids = $query->execute()->fetchCol();
+
+          if (!empty($ids)) {
+            db_delete('cache_form')
+              ->condition('cid', $ids, 'IN')
+              ->execute();
+          }
+        }
+        else {
+          db_delete('cache_form')
+            ->condition('expire', REQUEST_TIME, '<')
+            ->execute();
+        }
       }
     }
   }
