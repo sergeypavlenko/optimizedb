@@ -185,6 +185,29 @@ class OptimizedbFunctionsTestCase extends OptimizedbTestCase {
   }
 
   /**
+   * Testing, when user selected limit for delete entries from table cache_form.
+   */
+  public function testCronClearTableWithLimit() {
+    variable_set('optimizedb_clear_type', 0);
+    variable_set('optimizedb_clear_period', 100);
+    variable_set('optimizedb_clear_limit', 1);
+
+    $time = REQUEST_TIME - 3600;
+
+    for ($i = 1; $i <= 10; ++$i) {
+      $this->createCacheFormItem($i, $time);
+    }
+
+    for ($i = 11; $i <= 20; ++$i) {
+      $this->createCacheFormItem($i, $time + (3600 * 2));
+    }
+
+    $this->assertEqual($this->countCacheFormRows(), 20);
+    $this->drupalPost('admin/config/development/optimizedb', array(), t('Clear cache_form table'));
+    $this->assertEqual($this->countCacheFormRows(), 19);
+  }
+
+  /**
    * Count rows in cache form table.
    */
   protected function countCacheFormRows() {
